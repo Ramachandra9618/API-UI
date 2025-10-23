@@ -1,0 +1,18 @@
+{
+  "user_id" : "2095012",
+  "email" : "sxxxxxxxxxxx0@yxxxxxx.xxm",
+  "dp_email" : "testdpcutover1@homelane.com",
+  "property_type" : "Apartment",
+  "property_config" : "2 BHK",
+  "built_up" : "2",
+  "move_in_date" : "2025-04-03T18:30:00.000Z",
+  "city" : "Bengaluru",
+  "address" : "123, Shanthala Nagar, Richmond Town, Bengaluru, Karnataka, 560025, India",
+  "checkInFlag" : false,
+  "isPro" : "1",
+  "autoCreateProject" : false,
+  "possession" : 1,
+  "project_name" : "test_project",
+  "client_budget" : "500000",
+  "customer_name" : "7722102529"
+}
