@@ -1,4 +1,4 @@
-    const customerType = document.getElementById('customerType');
+const customerType = document.getElementById('customerType');
     const city = document.getElementById('city');
     const customerName = document.getElementById('customerName');
     const env = document.getElementById('env');
@@ -149,7 +149,12 @@ async function createLead() {
     runBtn.disabled = true;
 
     try {
-        const response = await fetch('http://localhost:8080/LeadCreation', {
+        // Get API base URL from config endpoint
+        const configResponse = await fetch('/api/config');
+        const config = await configResponse.json();
+        const apiBaseUrl = config.apiBaseUrl;
+        
+        const response = await fetch(`${apiBaseUrl}/LeadCreation`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)

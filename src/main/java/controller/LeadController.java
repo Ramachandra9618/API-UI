@@ -1,5 +1,6 @@
 package controller;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 import org.testng.ITestContext;
 import org.testng.ITestResult;
@@ -17,6 +18,16 @@ import static utils.Utilities.updateProperties;
 @CrossOrigin(origins = "*")
 @RestController
 public class LeadController {
+
+    @Value("${server.port:8080}")
+    private String serverPort;
+    
+    @GetMapping("/api/config")
+    public Map<String, String> getConfig() {
+        Map<String, String> config = new HashMap<>();
+        config.put("apiBaseUrl", "http://localhost:" + serverPort);
+        return config;
+    }
 
     @PostMapping("/LeadCreation")
     public Map<String, Object> runLeadCreationTest(@RequestBody Map<String, String> request) {
