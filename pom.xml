@@ -186,7 +186,7 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
-                    <mainClass>automationUi.AutomationUI</mainClass>
+                    <mainClass>sfleadcreation.SfLeadCreationWebApplication</mainClass>
                 </configuration>
             </plugin>
 
