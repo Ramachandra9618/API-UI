@@ -1,0 +1,1 @@
+web: java -jar target/SF_Lead_Creation-1.0-SNAPSHOT.jar
