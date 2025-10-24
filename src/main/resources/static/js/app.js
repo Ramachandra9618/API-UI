@@ -149,10 +149,19 @@ async function createLead() {
     runBtn.disabled = true;
 
     try {
-        // Get API base URL from config endpoint
-        const configResponse = await fetch('/api/config');
-        const config = await configResponse.json();
-        const apiBaseUrl = config.apiBaseUrl;
+        // Get API base URL preferring same-origin; fall back to backend config
+        let apiBaseUrl = window.location.origin;
+        try {
+            const configResponse = await fetch('/api/config');
+            if (configResponse.ok) {
+                const config = await configResponse.json();
+                if (config.apiBaseUrl) {
+                    apiBaseUrl = config.apiBaseUrl;
+                }
+            }
+        } catch (_) {
+            // ignore config errors; use same-origin
+        }
         
         const response = await fetch(`${apiBaseUrl}/LeadCreation`, {
             method: 'POST',

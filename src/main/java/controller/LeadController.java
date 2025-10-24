@@ -23,9 +23,17 @@ public class LeadController {
     private String serverPort;
     
     @GetMapping("/api/config")
-    public Map<String, String> getConfig() {
+    public Map<String, String> getConfig(HttpServletRequest request) {
         Map<String, String> config = new HashMap<>();
-        config.put("apiBaseUrl", "http://localhost:" + serverPort);
+        String proto = Optional.ofNullable(request.getHeader("X-Forwarded-Proto")).orElse(request.getScheme());
+        String hostHeader = Optional.ofNullable(request.getHeader("X-Forwarded-Host"))
+                .orElse(Optional.ofNullable(request.getHeader("Host")).orElse(""));
+        if (hostHeader.isEmpty()) {
+            int port = request.getServerPort();
+            String portPart = (port == 80 || port == 443) ? "" : ":" + port;
+            hostHeader = request.getServerName() + portPart;
+        }
+        config.put("apiBaseUrl", proto + "://" + hostHeader);
         return config;
     }
 
