@@ -163,6 +163,9 @@ async function createLead() {
             // ignore config errors; use same-origin
         }
         
+        console.log('Using API base URL:', apiBaseUrl);
+        
+        // Ensure we're using the correct endpoint path
         const response = await fetch(`${apiBaseUrl}/LeadCreation`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
