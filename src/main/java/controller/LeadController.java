@@ -11,6 +11,7 @@ import org.testng.xml.XmlInclude;
 import org.testng.xml.XmlSuite;
 import org.testng.xml.XmlTest;
 
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.*;
 
 import static utils.Utilities.updateProperties;
