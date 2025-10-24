@@ -11,8 +11,8 @@ login_Credential:
 
   prod:
     SFurl: https://design-cafe.my.salesforce.com/
-    SFUserName: hl-tech@designcafe.com
-    SFPassword: Dcafe@12345
+    SFUserName: rakesh.kh@designcafe.compro
+    SFPassword: QA@12345
     logged_in_user_id: "2092687"
     dp_email: "testuat@designcafe.com"
     dp_password: "Homelane@1234"
