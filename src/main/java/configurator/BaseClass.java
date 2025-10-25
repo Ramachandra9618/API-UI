@@ -123,26 +123,17 @@ public class BaseClass extends ApiService {
     public static void addToTestDataFromYml(String fileName, Map<String, Object> testData) {
         Yaml yaml = new Yaml();
         InputStream inputStream = null;
-
         try {
-            Path filePath = locateFile(fileName);
-            if (filePath == null) {
-                log.error("❌ YAML file not found: {}", fileName);
-                return;
-            }
-
-            inputStream = Files.newInputStream(filePath);
-            System.out.println("📄 Loading YAML from: " + filePath.toAbsolutePath());
-
+            inputStream = openClasspathStream(fileName);
+            if (inputStream == null) return;
             Map<String, Object> yamlData = yaml.load(inputStream);
             if (yamlData != null) {
                 testData.putAll(yamlData);
-                log.info("✅ Loaded YAML test data from {}", filePath);
+                log.info("✅ Loaded YAML test data from {}", fileName);
             } else {
-                log.warn("⚠️ YAML file {} was empty or invalid", filePath);
+                log.warn("⚠️ YAML file {} was empty or invalid", fileName);
             }
-
-        } catch (IOException e) {
+        } catch (Exception e) {
             log.error("❌ Failed to read YAML {}: {}", fileName, e.getMessage(), e);
         } finally {
             if (inputStream != null) try { inputStream.close(); } catch (IOException ignored) {}
@@ -152,24 +143,14 @@ public class BaseClass extends ApiService {
     public synchronized static void addToTestDataFromProperties(String fileName, Map<String, Object> testData) {
         Properties prop = new Properties();
         InputStream inputStream = null;
-
         try {
-            Path filePath = locateFile(fileName);
-            if (filePath == null) {
-                log.error("❌ Properties file not found: {}", fileName);
-                return;
-            }
-
-            inputStream = Files.newInputStream(filePath);
-            System.out.println("📄 Loading properties from: " + filePath.toAbsolutePath());
-
+            inputStream = openClasspathStream(fileName);
+            if (inputStream == null) return;
             prop.load(inputStream);
             for (String name : prop.stringPropertyNames()) {
                 testData.put(name, prop.getProperty(name));
             }
-
-            log.info("✅ Properties loaded successfully from {}", filePath);
-
+            log.info("✅ Properties loaded successfully from {}", fileName);
         } catch (IOException e) {
             log.error("❌ Failed to read properties {}: {}", fileName, e.getMessage(), e);
         } finally {
@@ -215,4 +196,15 @@ public class BaseClass extends ApiService {
         context.setAttribute(key, output);
     }
 
+    // Helper: load resources strictly from classpath
+    private static InputStream openClasspathStream(String fileName) {
+        String cpName = fileName.startsWith("/") ? fileName.substring(1) : fileName;
+        InputStream is = BaseClass.class.getClassLoader().getResourceAsStream(cpName);
+        if (is == null) {
+            log.error("❌ Resource not found on classpath: {}", cpName);
+        } else {
+            System.out.println("📄 Loading from classpath: " + cpName);
+        }
+        return is;
+    }
 }

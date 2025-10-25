@@ -8,15 +8,11 @@ import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-import org.testng.asserts.SoftAssert;
 import services.RoasterService;
 import services.SFService;
 import utils.PropertiesReader;
 import utils.Utilities;
-
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import static utils.Utilities.*;
