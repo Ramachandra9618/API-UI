@@ -8,9 +8,11 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import java.io.*;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.Map;
 
 public class UpdateJsons {
@@ -90,6 +92,22 @@ public class UpdateJsons {
         if (Files.exists(jpackagePath)) return jpackagePath;
         Path homePath = Paths.get(System.getProperty("user.home"), "SF_Lead_Creation", relativePath);
         if (Files.exists(homePath)) return homePath;
+
+        // 🔄 Fallback: classpath resource packaged in JAR
+        URL resourceUrl = UpdateJsons.class.getClassLoader().getResource(relativePath);
+        if (resourceUrl != null) {
+            try (InputStream is = UpdateJsons.class.getClassLoader().getResourceAsStream(relativePath)) {
+                if (is != null) {
+                    Path tempBase = Paths.get(System.getProperty("java.io.tmpdir"), "SF_Lead_Creation");
+                    Path tempPath = tempBase.resolve(relativePath);
+                    Files.createDirectories(tempPath.getParent());
+                    Files.copy(is, tempPath, StandardCopyOption.REPLACE_EXISTING);
+                    return tempPath;
+                }
+            } catch (IOException e) {
+                System.err.println("❌ Failed to materialize classpath resource to temp: " + e.getMessage());
+            }
+        }
 
         // ❌ Not found anywhere
         System.err.println("❌ File not found in any known location: " + relativePath);
