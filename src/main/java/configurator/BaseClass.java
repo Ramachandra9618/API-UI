@@ -126,25 +126,20 @@ public class BaseClass extends ApiService {
 
         try {
             Path filePath = locateFile(fileName);
-            if (filePath != null) {
-                inputStream = Files.newInputStream(filePath);
-                System.out.println("📄 Loading YAML from: " + filePath.toAbsolutePath());
-            } else {
-                // Fallback: classpath resource (packaged in JAR)
-                inputStream = BaseClass.class.getClassLoader().getResourceAsStream(fileName);
-                if (inputStream == null) {
-                    log.error("❌ YAML file not found in filesystem or classpath: {}", fileName);
-                    return;
-                }
-                System.out.println("📦 Loading YAML from classpath: " + fileName);
+            if (filePath == null) {
+                log.error("❌ YAML file not found: {}", fileName);
+                return;
             }
+
+            inputStream = Files.newInputStream(filePath);
+            System.out.println("📄 Loading YAML from: " + filePath.toAbsolutePath());
 
             Map<String, Object> yamlData = yaml.load(inputStream);
             if (yamlData != null) {
                 testData.putAll(yamlData);
-                log.info("✅ Loaded YAML test data from {}", fileName);
+                log.info("✅ Loaded YAML test data from {}", filePath);
             } else {
-                log.warn("⚠️ YAML file {} was empty or invalid", fileName);
+                log.warn("⚠️ YAML file {} was empty or invalid", filePath);
             }
 
         } catch (IOException e) {
@@ -160,25 +155,20 @@ public class BaseClass extends ApiService {
 
         try {
             Path filePath = locateFile(fileName);
-            if (filePath != null) {
-                inputStream = Files.newInputStream(filePath);
-                System.out.println("📄 Loading properties from: " + filePath.toAbsolutePath());
-            } else {
-                // Fallback: classpath resource (packaged in JAR)
-                inputStream = BaseClass.class.getClassLoader().getResourceAsStream(fileName);
-                if (inputStream == null) {
-                    log.error("❌ Properties file not found in filesystem or classpath: {}", fileName);
-                    return;
-                }
-                System.out.println("📦 Loading properties from classpath: " + fileName);
+            if (filePath == null) {
+                log.error("❌ Properties file not found: {}", fileName);
+                return;
             }
+
+            inputStream = Files.newInputStream(filePath);
+            System.out.println("📄 Loading properties from: " + filePath.toAbsolutePath());
 
             prop.load(inputStream);
             for (String name : prop.stringPropertyNames()) {
                 testData.put(name, prop.getProperty(name));
             }
 
-            log.info("✅ Properties loaded successfully from {}", fileName);
+            log.info("✅ Properties loaded successfully from {}", filePath);
 
         } catch (IOException e) {
             log.error("❌ Failed to read properties {}: {}", fileName, e.getMessage(), e);

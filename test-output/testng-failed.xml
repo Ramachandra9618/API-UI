@@ -5,7 +5,7 @@
     <classes>
       <class name="tests.CreateMultipleLeadsFromTheRosterTest">
         <methods>
-          <include name="testCreateBulkLeads" invocation-numbers="0"/>
+          <include name="testCreateBulkLeads"/>
           <include name="setUp"/>
           <include name="afterClassTasks"/>
         </methods>
