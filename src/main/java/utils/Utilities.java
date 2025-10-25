@@ -27,12 +27,25 @@ public class Utilities {
     public synchronized static void updateProperties(String resourcePath, Map<String, String> propertiesToUpdate) {
         Properties properties = new Properties();
         Path inputPath = null;
+        boolean isClasspathOnly = false;
 
         try {
+            // Check if resource exists in classpath
+            InputStream classpathStream = Utilities.class.getResourceAsStream("/" + resourcePath);
+            if (classpathStream != null) {
+                try {
+                    properties.load(classpathStream);
+                    isClasspathOnly = true; // Assume classpath-only until we find a writable file
+                } finally {
+                    classpathStream.close();
+                }
+            }
+
             // 1️⃣ Try working directory (for IntelliJ or mvn javafx:run)
             Path userDirPath = Paths.get(System.getProperty("user.dir"), resourcePath);
             if (Files.exists(userDirPath)) {
                 inputPath = userDirPath;
+                isClasspathOnly = false; // We found a writable file
             }
 
             // 2️⃣ Try jpackage app directory (runtime image's app folder)
@@ -44,6 +57,7 @@ public class Utilities {
 
                 if (Files.exists(appDir)) {
                     inputPath = appDir;
+                    isClasspathOnly = false; // We found a writable file
                 }
             }
 
@@ -52,37 +66,66 @@ public class Utilities {
                 Path homePath = Paths.get(System.getProperty("user.home"), "SF_Lead_Creation", resourcePath);
                 if (Files.exists(homePath)) {
                     inputPath = homePath;
+                    isClasspathOnly = false; // We found a writable file
                 }
             }
 
-            // 4️⃣ File not found in any of the locations
-            if (inputPath == null || !Files.exists(inputPath)) {
-                System.err.println("❌ Properties file not found in any known location: " + resourcePath);
+            // 4️⃣ Check for CONFIG_WRITE_DIR environment variable
+            String configWriteDir = System.getenv("CONFIG_WRITE_DIR");
+            if (configWriteDir != null && !configWriteDir.isEmpty() && (inputPath == null || !Files.exists(inputPath))) {
+                Path envPath = Paths.get(configWriteDir, resourcePath);
+                // Create parent directories if they don't exist
+                if (!Files.exists(envPath.getParent())) {
+                    Files.createDirectories(envPath.getParent());
+                }
+                
+                // If file doesn't exist but we have properties from classpath, create it
+                if (!Files.exists(envPath) && isClasspathOnly) {
+                    try (OutputStream output = Files.newOutputStream(envPath)) {
+                        properties.store(output, "Created from classpath resource");
+                    }
+                }
+                
+                if (Files.exists(envPath) || isClasspathOnly) {
+                    inputPath = envPath;
+                    isClasspathOnly = false; // We found or created a writable file
+                }
+            }
+
+            // 5️⃣ File not found in any writable location but exists in classpath
+            if ((inputPath == null || !Files.exists(inputPath)) && isClasspathOnly) {
+                log.info("⚠️ Cannot update read-only classpath resource: {}. Changes will not persist after restart.", resourcePath);
+                log.info("💡 To make this configuration writable, set CONFIG_WRITE_DIR environment variable to a writable directory.");
                 return;
             }
 
-            System.out.println("📄 Loading properties from: " + inputPath.toAbsolutePath());
+            // 6️⃣ File not found in any location
+            if (inputPath == null || !Files.exists(inputPath)) {
+                log.error("❌ Properties file not found in any known location: {}", resourcePath);
+                return;
+            }
 
-            // 5️⃣ Load existing properties
+            log.info("📄 Loading properties from: {}", inputPath.toAbsolutePath());
+
+            // 7️⃣ Load existing properties from file
             try (InputStream inputStream = Files.newInputStream(inputPath)) {
                 properties.load(inputStream);
             }
 
-            // 6️⃣ Update properties
+            // 8️⃣ Update properties
             for (Map.Entry<String, String> entry : propertiesToUpdate.entrySet()) {
                 properties.setProperty(entry.getKey(), entry.getValue());
             }
 
-            // 7️⃣ Write updated values back to SAME file
+            // 9️⃣ Write updated values back to SAME file
             try (OutputStream output = Files.newOutputStream(inputPath)) {
                 properties.store(output, "Updated properties");
             }
 
-            //   System.out.println("✅ Properties updated successfully at: " + inputPath.toAbsolutePath());
+            log.info("✅ Properties updated successfully at: {}", inputPath.toAbsolutePath());
 
         } catch (IOException e) {
-            System.err.println("❌ Failed to update properties: " + e.getMessage());
-            e.printStackTrace();
+            log.error("❌ Failed to update properties: {}", e.getMessage(), e);
         }
     }
 
