@@ -12,38 +12,61 @@ import services.RoasterService;
 import services.SFService;
 import utils.PropertiesReader;
 import utils.Utilities;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
 import static utils.Utilities.*;
 
 public class CreateMultipleLeadsFromTheRosterTest extends BaseClass {
+
     private static final Logger logger = LogManager.getLogger(CreateMultipleLeadsFromTheRosterTest.class);
-    RoasterService roasterService ;
-    PropertiesReader propertiesReader;
-    SFService sfService = new SFService();
-    Map<String, String> projectDetails = new HashMap<>();
-    Utilities utilities = new Utilities();
-    String filepath;
-    int currentIndex;
+    private RoasterService roasterService;
+    private PropertiesReader propertiesReader;
+    private final SFService sfService = new SFService();
+    private final Utilities utilities = new Utilities();
+
+    private Map<String, String> projectDetails = new HashMap<>();
+    private String filepath;
+    private int currentIndex;
+
+    /**
+     * Dynamically resolves base path for reports (works for both local + cloud)
+     */
+    private static String getReportsBaseDir() {
+        String envReportDir = System.getenv("REPORT_PATH");
+        if (envReportDir != null && !envReportDir.isBlank()) {
+            return envReportDir;
+        }
+        // ✅ Default: ~/API-UI/reports (works on both local & Railway)
+        return System.getProperty("user.home") + "/API-UI/reports";
+    }
 
     @BeforeMethod
-    public void setUp(){
+    public void setUp() {
         refreshTestData();
-         propertiesReader = new PropertiesReader(testData);
+        propertiesReader = new PropertiesReader(testData);
         roasterService = new RoasterService();
         roasterService.initialize();
+
         if (!leadInputValidation()) {
             throw new RuntimeException("Lead input validation failed. Aborting test execution.");
         }
-        System.out.println("lead input validation passed");
-      //  filepath = generateLeadCreationCSV(propertiesReader.getEnvironment(), customerType);
+
+        System.out.println("lead input validation passed ✅");
+
+        // Always generate CSV in valid base path
+        filepath = generateLeadCreationCSV(propertiesReader.getEnvironment(), customerType);
+        System.out.println("📁 Report CSV created at: " + filepath);
     }
 
     @Test(enabled = true)
     public void testCreateBulkLeads(ITestContext context) {
         System.out.println("testCreateBulkLeads started");
-        runLeadCreation(propertiesReader.getLeadCount(), customerType, propertiesReader.getEnvironment(), currentIndex,context);
+        runLeadCreation(propertiesReader.getLeadCount(), customerType, propertiesReader.getEnvironment(), currentIndex, context);
     }
 
     private void runLeadCreation(int leadCount, String customerType, String environment, int currentIndex, ITestContext context) {
@@ -59,8 +82,6 @@ public class CreateMultipleLeadsFromTheRosterTest extends BaseClass {
                                      int workingIndex, ITestContext context) {
 
         int successfulLeads = 0;
-
-        // Initial log
         String startMessage = String.format("🚀 Starting to create %d lead(s) from index %d onward.", leadCount, workingIndex);
         logger.info(startMessage);
         captureOutput(context, "testCreateBulkLeadsOutput", startMessage);
@@ -73,7 +94,7 @@ public class CreateMultipleLeadsFromTheRosterTest extends BaseClass {
                     String creatingMsg = String.format("Creating lead at index %d (attempt %d).", workingIndex, attempt);
                     logger.info(creatingMsg);
                     captureOutput(context, "testCreateBulkLeadsOutput", creatingMsg);
-     
+
                     projectDetails = switch (customerType) {
                         case "HL", "HFN", "LUXE" -> roasterService.createProject(dpEmail, workingIndex);
                         case "DC" -> {
@@ -87,7 +108,6 @@ public class CreateMultipleLeadsFromTheRosterTest extends BaseClass {
                             projectDetails.containsKey("customerId") &&
                             projectDetails.containsKey("projectID")) {
 
-                        // Capture success message
                         String successMsg = String.format(
                                 "✅ Lead #%d created successfully. CustomerId=%s, ProjectID=%s, DP Email=%s",
                                 workingIndex,
@@ -96,13 +116,10 @@ public class CreateMultipleLeadsFromTheRosterTest extends BaseClass {
                                 projectDetails.get("dpEmail")
                         );
                         logger.info(successMsg);
-                        captureOutput(context,"projectFullURL", projectDetails.get("fullProjectURL"));
-                        captureOutput(context,"customerId",  projectDetails.get("customerId"));
+                        captureOutput(context, "projectFullURL", projectDetails.get("fullProjectURL"));
+                        captureOutput(context, "customerId", projectDetails.get("customerId"));
                         captureOutput(context, "testCreateBulkLeadsOutput", successMsg);
 
-                        // Store in ITestContext
-                        context.setAttribute("LastSuccessfulLeadIndex", workingIndex);
-                        // Append to CSV
                         String[] resultData = {
                                 String.valueOf(workingIndex),
                                 customerType,
@@ -119,21 +136,13 @@ public class CreateMultipleLeadsFromTheRosterTest extends BaseClass {
                         success = true;
 
                     } else {
-                        String warnMsg = String.format(
-                                "⚠️ Lead #%d creation failed on attempt %d: Incomplete project details.",
-                                workingIndex, attempt
-                        );
+                        String warnMsg = String.format("⚠️ Lead #%d creation failed on attempt %d: Incomplete project details.", workingIndex, attempt);
                         logger.warn(warnMsg);
                         captureFailure(context, "testCreateBulkLeadsFailures", warnMsg);
-
-
                     }
 
                 } catch (Throwable t) {
-                    String errorMsg = String.format(
-                            "🛑 Lead #%d failed on attempt %d: %s",
-                            workingIndex, attempt, t.getMessage()
-                    );
+                    String errorMsg = String.format("🛑 Lead #%d failed on attempt %d: %s", workingIndex, attempt, t.getMessage());
                     logger.error(errorMsg);
                     captureFailure(context, "testCreateBulkLeadsOutput", errorMsg);
                 }
@@ -156,39 +165,52 @@ public class CreateMultipleLeadsFromTheRosterTest extends BaseClass {
         }
     }
 
-
+    /**
+     * ✅ Creates CSV report safely under environment-independent folder.
+     */
     public String generateLeadCreationCSV(String environment, String customerType) {
-        String[] headers = {"S.no", "customer_Id", "projectID", "designerEmail", "designerId"};
-        String subFolder = "reports/LeadCreationReports/" + environment + "/" + formatCurrentDate("📅dd-MM-yyyy↘️");
-        String fileName = customerType + "-Leads_LastAt_" +propertiesReader.getLastProcessedIndex()  + ".csv";
-        String filePath = subFolder + "/" + fileName;
-        utilities.createCSVReport(headers, filePath);
-        return filePath;
-    }
+        try {
+            String baseDir = getReportsBaseDir();
+            String subFolder = baseDir + "/LeadCreationReports/" + environment + "/" + formatCurrentDate("📅dd-MM-yyyy↘️");
+            Files.createDirectories(Paths.get(subFolder));
 
+            String fileName = customerType + "-Leads_LastAt_" + propertiesReader.getLastProcessedIndex() + ".csv";
+            String filePath = subFolder + "/" + fileName;
+
+            String[] headers = {"S.no", "customer_Id", "projectID", "designerEmail", "designerId"};
+            utilities.createCSVReport(headers, filePath);
+
+            return filePath;
+        } catch (Exception e) {
+            throw new RuntimeException("❌ Failed to create CSV report: " + e.getMessage(), e);
+        }
+    }
 
     private boolean leadInputValidation() {
         boolean isValid = true;
         int lastProcessedLeadIndex = propertiesReader.getLastProcessedIndex();
         System.out.println(propertiesReader.getFiledDate());
-        if ( isBeforeToday(propertiesReader.getFiledDate())) {
+
+        if (isBeforeToday(propertiesReader.getFiledDate())) {
             lastProcessedLeadIndex = 1;
         }
+
         if ((propertiesReader.getLeadCount() + propertiesReader.getLastProcessedIndex()) >= 100) {
-            logger.error("❌ TotalLeadsToCreate should be less than 100. Please provide different mobileStarting prefix and lastProcessedLeadIndex reset to 0 Found: {}", propertiesReader.getLeadCount() + lastProcessedLeadIndex);
+            logger.error("❌ TotalLeadsToCreate should be less than 100. Please provide different mobileStarting prefix.");
             isValid = false;
         }
- System.out.println("jai sri ram-1");
+
         try {
             int prefix = Integer.parseInt(propertiesReader.getMobilePrefix());
             if (prefix < 59 || prefix > 99) {
-                logger.error("❌ Invalid mobile number prefix. It must between 60-99. Found: {}", propertiesReader.getMobilePrefix());
+                logger.error("❌ Invalid mobile number prefix. It must be between 60-99. Found: {}", propertiesReader.getMobilePrefix());
                 isValid = false;
             }
         } catch (NumberFormatException e) {
             logger.error("❌ Mobile number prefix is not a valid number: {}", propertiesReader.getMobilePrefix());
             isValid = false;
         }
+
         currentIndex = lastProcessedLeadIndex + 1;
         return isValid;
     }
@@ -196,12 +218,15 @@ public class CreateMultipleLeadsFromTheRosterTest extends BaseClass {
     @AfterClass
     public void afterClassTasks() {
         Map<String, String> updateUserProperty = new HashMap<>();
-
         updateUserProperty.put("lastProcessedLeadIndex", String.valueOf(--currentIndex));
         updateUserProperty.put("leadScriptRunDate", formatCurrentDate("dd-MM-yyyy"));
         updateProperties("userConfigurations.properties", updateUserProperty);
-        
-        String finalFileName = propertiesReader.getLeadCount() + "_" + customerType + "-Leads_LastAt_" + currentIndex + formatCurrentDate(" ⏰ hh.mm.a") + ".csv";
-        utilities.renamingLeadReportFile(filepath, finalFileName);
+
+        if (filepath != null && !filepath.isBlank()) {
+            String finalFileName = propertiesReader.getLeadCount() + "_" + customerType + "-Leads_LastAt_" + currentIndex + formatCurrentDate(" ⏰ hh.mm.a") + ".csv";
+            utilities.renamingLeadReportFile(filepath, finalFileName);
+        } else {
+            System.err.println("⚠️ No report file generated — skipping rename.");
+        }
     }
 }
