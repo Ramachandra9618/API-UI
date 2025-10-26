@@ -104,37 +104,28 @@ public class Utilities {
         }
     }
 
-    public static boolean isBeforeToday(String filedDate) {
-        // Guard against null/blank values (cloud may pass empty strings)
-        if (filedDate == null) return false;
-        String s = filedDate.trim();
-        if (s.isEmpty()) return false;
-
-        try {
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
-            LocalDate fileDateParsed;
-
-            // Try primary format dd-MM-yyyy
-            try {
-                fileDateParsed = LocalDate.parse(s, formatter);
-            } catch (DateTimeParseException e1) {
-                // Fallback: ISO date yyyy-MM-dd
-                try {
-                    fileDateParsed = LocalDate.parse(s, DateTimeFormatter.ISO_LOCAL_DATE);
-                } catch (DateTimeParseException e2) {
-                    System.err.println("Invalid date format: " + filedDate);
-                    return false;
-                }
-            }
-
-            LocalDate today = LocalDate.now();
-            // Keep original semantics: return true if date is not today
-            return fileDateParsed.isBefore(today) || fileDateParsed.isAfter(today);
-        } catch (Exception e) {
-            System.err.println("Invalid date format: " + filedDate);
+   public static boolean isBeforeToday(String filedDate) {
+    try {
+        if (filedDate == null || filedDate.isBlank()) {
+            System.err.println("Date string is null or empty");
             return false;
         }
+
+        filedDate = filedDate.trim().replaceAll("[^0-9\\-]", "");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy", Locale.ENGLISH);
+
+        LocalDate fileDateParsed = LocalDate.parse(filedDate, formatter);
+        LocalDate today = LocalDate.now();
+
+        // Only before today (your logic seems incorrect earlier)
+        return fileDateParsed.isBefore(today);
+
+    } catch (DateTimeParseException e) {
+        System.err.println("Invalid date format: [" + filedDate + "] → " + e.getMessage());
+        return false;
     }
+}
+
 
     public void renamingLeadReportFile(String filePath, String finalFileName) {
         File oldFile = new File(filePath);

@@ -30,7 +30,7 @@ public class BaseClass extends ApiService {
         // Read customerType and city
         customerType = (String) testData.get("customerType");
         userSelectedCityProperty = String.valueOf(testData.get("userSelectedCityProperty"));
-
+        System.out.println(testData);
         if (customerType == null || userSelectedCityProperty == null) {
             log.error("❌ customerType or userSelectedCityProperty is missing in userConfigurations.properties");
             return;

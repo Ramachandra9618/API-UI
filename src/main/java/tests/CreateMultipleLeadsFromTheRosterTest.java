@@ -168,7 +168,8 @@ public class CreateMultipleLeadsFromTheRosterTest extends BaseClass {
     private boolean leadInputValidation() {
         boolean isValid = true;
         int lastProcessedLeadIndex = propertiesReader.getLastProcessedIndex();
-        if (propertiesReader.getFiledDate() == null || isBeforeToday(propertiesReader.getFiledDate())) {
+        System.out.println(propertiesReader.getFiledDate());
+        if ( isBeforeToday(propertiesReader.getFiledDate())) {
             lastProcessedLeadIndex = 1;
         }
         if ((propertiesReader.getLeadCount() + propertiesReader.getLastProcessedIndex()) >= 100) {
