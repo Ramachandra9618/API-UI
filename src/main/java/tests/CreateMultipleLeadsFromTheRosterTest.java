@@ -36,8 +36,8 @@ public class CreateMultipleLeadsFromTheRosterTest extends BaseClass {
         if (!leadInputValidation()) {
             throw new RuntimeException("Lead input validation failed. Aborting test execution.");
         }
+        System.out.println("lead input validation passed");
         filepath = generateLeadCreationCSV(propertiesReader.getEnvironment(), customerType);
-
     }
 
     @Test(enabled = true)
@@ -180,7 +180,7 @@ public class CreateMultipleLeadsFromTheRosterTest extends BaseClass {
             logger.error("❌ TotalLeadsToCreate should be less than 100. Please provide different mobileStarting prefix and lastProcessedLeadIndex reset to 0 Found: {}", propertiesReader.getLeadCount() + lastProcessedLeadIndex);
             isValid = false;
         }
-
+ System.out.println("jai sri ram-1");
         try {
             int prefix = Integer.parseInt(propertiesReader.getMobilePrefix());
             if (prefix < 59 || prefix > 99) {
