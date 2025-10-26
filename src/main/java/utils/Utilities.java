@@ -25,34 +25,41 @@ public class Utilities {
     }
 
      // ✅ Preferred base path (auto-adjusts for local vs. cloud)
-   private static final String LOCAL_CONFIG_FOLDER =
-            System.getProperty("user.home") + "/OneDrive/Documents/API-UI/input"; // ✅ include /input
-    private static final String CLOUD_CONFIG_FOLDER =
-            System.getProperty("user.home") + "/API-UI/input"; // ✅ include /input
+    private static final String LOCAL_CONFIG_FOLDER = System.getProperty("user.home") + "/OneDrive/Documents/API-UI/input"; // ✅ include /input
+    private static final String CLOUD_CONFIG_FOLDER = System.getProperty("user.home") + "/API-UI/input"; // ✅ include /input
+    private static final String RAILWAY_VOLUME_FOLDER = "/mnt/railway/input";
+
 
     /**
      * Dynamically determines config folder depending on environment.
      */
     private static Path getConfigDir() {
-        Path localPath = Paths.get(LOCAL_CONFIG_FOLDER);
-        if (Files.exists(localPath)) {
-            System.out.println("💻 Using local config directory: " + localPath.toAbsolutePath());
-            return localPath;
-        }
-
-        Path cloudPath = Paths.get(CLOUD_CONFIG_FOLDER);
-        try {
-            if (!Files.exists(cloudPath)) {
-                Files.createDirectories(cloudPath);
-                System.out.println("☁️ Created cloud config directory: " + cloudPath.toAbsolutePath());
-            } else {
-                System.out.println("☁️ Using existing cloud config directory: " + cloudPath.toAbsolutePath());
-            }
-        } catch (IOException e) {
-            System.err.println("❌ Failed to create cloud config directory: " + e.getMessage());
-        }
-        return cloudPath;
+    Path railwayPath = Paths.get(RAILWAY_VOLUME_FOLDER);
+    if (Files.exists(railwayPath)) {
+        System.out.println("☁️ Using Railway volume config directory: " + railwayPath.toAbsolutePath());
+        return railwayPath;
     }
+
+    Path localPath = Paths.get(LOCAL_CONFIG_FOLDER);
+    if (Files.exists(localPath)) {
+        System.out.println("💻 Using local config directory: " + localPath.toAbsolutePath());
+        return localPath;
+    }
+
+    Path cloudPath = Paths.get(CLOUD_CONFIG_FOLDER);
+    try {
+        if (!Files.exists(cloudPath)) {
+            Files.createDirectories(cloudPath);
+            System.out.println("☁️ Created fallback cloud config directory: " + cloudPath.toAbsolutePath());
+        } else {
+            System.out.println("☁️ Using existing fallback cloud config directory: " + cloudPath.toAbsolutePath());
+        }
+    } catch (IOException e) {
+        System.err.println("❌ Failed to create cloud config directory: " + e.getMessage());
+    }
+    return cloudPath;
+}
+
 
     /**
      * Updates (or creates once) a .properties file with given key-value pairs.
@@ -80,6 +87,22 @@ public class Utilities {
                 Files.createFile(filePath);
                 System.out.println("🆕 Created new properties file: " + filePath.toAbsolutePath());
             }
+
+            // Print current values before update
+            if (!props.isEmpty()) {
+                System.out.println("🔹 Current properties before update:");
+                props.forEach((k, v) -> System.out.println(k + " = " + v));
+            } else {
+                System.out.println("⚪ No existing properties, starting fresh.");
+            }
+
+            // Apply updates (overwrites same keys, keeps old ones)
+            propertiesToUpdate.forEach(props::setProperty);
+
+            // Print values after update
+            System.out.println("🔹 Properties after update:");
+            props.forEach((k, v) -> System.out.println(k + " = " + v));
+
 
             // ✅ Apply updates (overwrites same keys, keeps old ones)
             propertiesToUpdate.forEach(props::setProperty);
