@@ -107,8 +107,7 @@ public class Utilities {
    public static boolean isBeforeToday(String filedDate) {
     try {
         if (filedDate == null || filedDate.isBlank()) {
-            System.err.println("Date string is null or empty");
-            return false;
+            filedDate = LocalDate.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy"));
         }
 
         filedDate = filedDate.trim().replaceAll("[^0-9\\-]", "");
