@@ -80,6 +80,7 @@ public class Utilities {
                 Files.createFile(filePath);
                 System.out.println("🆕 Created new properties file: " + filePath.toAbsolutePath());
                 propertiesToUpdate.put("lastProcessedLeadIndex", "1");
+                propertiesToUpdate.put("gmailDomain", "@yopmail.com");
                 String formattedDate = LocalDate.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy"));
                 propertiesToUpdate.put("leadScriptRunDate", formattedDate);   
             }
