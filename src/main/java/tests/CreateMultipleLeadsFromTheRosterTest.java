@@ -37,7 +37,7 @@ public class CreateMultipleLeadsFromTheRosterTest extends BaseClass {
             throw new RuntimeException("Lead input validation failed. Aborting test execution.");
         }
         System.out.println("lead input validation passed");
-        filepath = generateLeadCreationCSV(propertiesReader.getEnvironment(), customerType);
+      //  filepath = generateLeadCreationCSV(propertiesReader.getEnvironment(), customerType);
     }
 
     @Test(enabled = true)

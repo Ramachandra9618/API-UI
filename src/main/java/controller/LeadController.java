@@ -113,6 +113,15 @@ public class LeadController {
                     }
                 }
 
+                        @Override
+                        public void onConfigurationFailure(ITestResult tr) {
+                            System.out.println("❌ Configuration Failure in: " + tr.getName());
+                            if (tr.getThrowable() != null) {
+                                tr.getThrowable().printStackTrace(System.out);
+                            }
+                        }
+
+
                 @Override
                 public void onTestSkipped(ITestResult tr) {
                     response.put("status", "SKIPPED");
