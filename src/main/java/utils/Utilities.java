@@ -124,6 +124,48 @@ public class Utilities {
 
         return result;
     }
+
+    public synchronized static void addToTestDataFromProperties(String fileName, Map<String, Object> testData) {
+    Properties prop = new Properties();
+    Path filePath = null;
+
+    // 1️⃣ Try local folder
+    Path localFile = Paths.get(LOCAL_CONFIG_FOLDER, fileName);
+    if (Files.exists(localFile)) {
+        filePath = localFile;
+        log.info("📂 Using local properties: {}", filePath.toAbsolutePath());
+    } else {
+        // 2️⃣ Try cloud folder
+        Path cloudFile = Paths.get(CLOUD_CONFIG_FOLDER, fileName);
+        if (Files.exists(cloudFile)) {
+            filePath = cloudFile;
+            log.info("☁️ Using cloud properties: {}", filePath.toAbsolutePath());
+        }
+    }
+
+    try (InputStream inputStream = filePath != null 
+                ? Files.newInputStream(filePath) 
+                : Utilities.class.getResourceAsStream("/" + fileName)) {
+
+        if (inputStream == null) {
+            log.error("❌ Properties file not found in local, cloud, or classpath: {}", fileName);
+            return;
+        }
+
+        prop.load(inputStream);
+        for (String name : prop.stringPropertyNames()) {
+            testData.put(name, prop.getProperty(name));
+        }
+
+        log.info("✅ Properties loaded successfully from {}", 
+                 filePath != null ? filePath.toAbsolutePath() : "classpath:/" + fileName);
+
+    } catch (IOException e) {
+        log.error("❌ Failed to read properties {}: {}", fileName, e.getMessage(), e);
+    }
+}
+
+    
     public void appendTestResults(String[] testResults, String filepath) {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(filepath, true))) {
 
