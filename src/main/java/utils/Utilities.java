@@ -25,8 +25,8 @@ public class Utilities {
     }
 
      // ✅ Preferred base path (auto-adjusts for local vs. cloud)
-    private static final String LOCAL_CONFIG_FOLDER = System.getProperty("user.home") + "/OneDrive/Documents/API-UI/input";
-    private static final String CLOUD_CONFIG_FOLDER = System.getProperty("user.home") + "/API-UI/input";
+    private static final String LOCAL_CONFIG_FOLDER = System.getProperty("user.home") + "/OneDrive/Documents/API-UI";
+    private static final String CLOUD_CONFIG_FOLDER = System.getProperty("user.home") + "/API-UI";
 
     /**
      * Dynamically determines config folder depending on environment.
