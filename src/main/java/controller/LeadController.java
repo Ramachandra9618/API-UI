@@ -43,14 +43,14 @@ public class LeadController {
         System.out.println("Received Lead Creation Request: " + request);
 
         // Update test config properties
-        updateProperties("userConfigurations.properties", Map.of(
-                "customerName", request.get("customerName"),
-                "environment", request.get("environment"),
-                "customerType", request.get("customerType"),
-                "totalLeadsToCreate", request.get("noOfLeads"),
-                "userSelectedCityProperty", request.get("userSelectedCityProperty"),
-                "mobileNoStarting2digitPrefix", request.get("mobileNoStarting2digitPrefix")
-        ));
+     updateProperties("userConfigurations.properties", new HashMap<>(Map.of(
+        "customerName", request.get("customerName"),
+        "environment", request.get("environment"),
+        "customerType", request.get("customerType"),
+        "totalLeadsToCreate", request.get("noOfLeads"),
+        "userSelectedCityProperty", request.get("userSelectedCityProperty"),
+        "mobileNoStarting2digitPrefix", request.get("mobileNoStarting2digitPrefix")
+)));
 
         Map<String, Object> response = new HashMap<>();
         List<String> allOutputs = new ArrayList<>();
