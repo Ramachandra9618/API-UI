@@ -70,7 +70,7 @@ public class LeadController {
 
             TestNG testng = new TestNG();
             testng.setXmlSuites(Collections.singletonList(suite));
-
+             System.out.println("testng.setXmlSuites(Collections.singletonList(suite)); ");
             // --- Custom listener to capture success/failure
             TestListenerAdapter tla = new TestListenerAdapter() {
 

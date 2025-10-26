@@ -42,6 +42,7 @@ public class CreateMultipleLeadsFromTheRosterTest extends BaseClass {
 
     @Test(enabled = true)
     public void testCreateBulkLeads(ITestContext context) {
+        System.out.println("testCreateBulkLeads started");
         runLeadCreation(propertiesReader.getLeadCount(), customerType, propertiesReader.getEnvironment(), currentIndex,context);
     }
 
@@ -49,6 +50,7 @@ public class CreateMultipleLeadsFromTheRosterTest extends BaseClass {
         String dpId = "745564";
         String dpEmail = "testorgstructuredp1@homelane.com";
         String dpName = "Test DP User";
+        System.out.println("runLeadCreationBulk started");
         runLeadCreationBulk(leadCount, customerType, dpId, dpEmail, dpName, currentIndex, context);
     }
 
@@ -71,7 +73,7 @@ public class CreateMultipleLeadsFromTheRosterTest extends BaseClass {
                     String creatingMsg = String.format("Creating lead at index %d (attempt %d).", workingIndex, attempt);
                     logger.info(creatingMsg);
                     captureOutput(context, "testCreateBulkLeadsOutput", creatingMsg);
-
+     
                     projectDetails = switch (customerType) {
                         case "HL", "HFN", "LUXE" -> roasterService.createProject(dpEmail, workingIndex);
                         case "DC" -> {
@@ -172,10 +174,6 @@ public class CreateMultipleLeadsFromTheRosterTest extends BaseClass {
         if ( isBeforeToday(propertiesReader.getFiledDate())) {
             lastProcessedLeadIndex = 1;
         }
-        System.out.println(lastProcessedLeadIndex);
-        System.out.println(propertiesReader.getLeadCount());
-        System.out.println(propertiesReader.getLeadCount() + propertiesReader.getLastProcessedIndex());
-        System.out.println("jai sri ram");
         if ((propertiesReader.getLeadCount() + propertiesReader.getLastProcessedIndex()) >= 100) {
             logger.error("❌ TotalLeadsToCreate should be less than 100. Please provide different mobileStarting prefix and lastProcessedLeadIndex reset to 0 Found: {}", propertiesReader.getLeadCount() + lastProcessedLeadIndex);
             isValid = false;
