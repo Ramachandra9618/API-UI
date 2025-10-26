@@ -24,17 +24,27 @@ public class Utilities {
         return formatter.format(new Date());
     }
 
-    private static final String CONFIG_FOLDER = System.getProperty("user.home") + "/OneDrive/Documents/API-UI";
+    private static final String CONFIG_FOLDER = Optional.ofNullable(System.getenv("CONFIG_DIR")).orElse(System.getProperty("user.dir"));
 
    public synchronized static boolean updateProperties(String fileName, Map<String, String> propertiesToUpdate) {
     try {
-        Path configDir = Paths.get(CONFIG_FOLDER);
-        if (!Files.exists(configDir)) {
-            Files.createDirectories(configDir);
-            System.out.println("📁 Created config directory: " + configDir.toAbsolutePath());
+        // Normalize resource path (remove leading slashes for cross-platform safety)
+        String normalized = fileName.replaceFirst("^[/\\\\]+", "");
+
+        // Base directory for resolving relative paths (cloud-safe)
+        Path baseDir = Paths.get(CONFIG_FOLDER);
+
+        // Resolve target path: use absolute if provided, else under baseDir
+        Path targetPath = Paths.get(normalized);
+        Path propertiesPath = targetPath.isAbsolute() ? targetPath : baseDir.resolve(targetPath);
+
+        // Ensure parent directories exist
+        Path parent = propertiesPath.getParent();
+        if (parent != null && !Files.exists(parent)) {
+            Files.createDirectories(parent);
+            System.out.println("📁 Ensured directory exists: " + parent.toAbsolutePath());
         }
 
-        Path propertiesPath = configDir.resolve(fileName);
         System.out.println("🔍 Properties file path: " + propertiesPath.toAbsolutePath());
 
         // Create file if it doesn't exist
