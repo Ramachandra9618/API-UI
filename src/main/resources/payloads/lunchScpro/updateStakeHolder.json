@@ -1,0 +1,11 @@
+{
+  "users" : [ {
+    "roleName" : "designer_1",
+    "id" : "745564"
+  }, {
+    "roleName" : "designer_2",
+    "id" : 745564
+  } ],
+  "customerID" : "73889308",
+  "loggedInUserID" : 745564
+}

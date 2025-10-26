@@ -41,60 +41,93 @@ public class UpdateJsons {
             throw new RuntimeException("Error writing JSON to file: " + filepath, e);
         }
     }
+
     public String updatePayloadFromMap(String relativePath, Map<String, Object> updatedData) {
-        try {
-            // 🔍 Resolve the file dynamically for IDE / JAR / jpackage
-            Path resolvedPath = resolveAppFile(relativePath);
-            if (resolvedPath == null) {
-                throw new FileNotFoundException("❌ Payload file not found: " + relativePath);
-            }
+    try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream(relativePath)) {
 
-           // System.out.println("📄 Loading JSON from: " + resolvedPath.toAbsolutePath());
-
-            // 🔹 Read the JSON
-            JsonNode rootNode = objectMapper.readTree(resolvedPath.toFile());
-
-            // 🔹 Apply updates
-            if (rootNode.isObject()) {
-                updateNode((ObjectNode) rootNode, updatedData);
-            } else if (rootNode.isArray()) {
-                for (JsonNode item : rootNode) {
-                    if (item.isObject()) {
-                        updateNode((ObjectNode) item, updatedData);
-                    }
-                }
-            } else {
-                throw new IllegalArgumentException("Unsupported root node type in JSON: " + relativePath);
-            }
-
-            // 🔹 Write back to same file
-            objectMapper.writerWithDefaultPrettyPrinter().writeValue(resolvedPath.toFile(), rootNode);
-
-           // System.out.println("💾 Updated payload saved to: " + resolvedPath.toAbsolutePath());
-
-            return objectMapper.writeValueAsString(rootNode);
-
-        } catch (IOException e) {
-            throw new RuntimeException("❌ Failed to update JSON payload: " + e.getMessage(), e);
+        if (inputStream == null) {
+            throw new FileNotFoundException("❌ Payload not found in resources: " + relativePath);
         }
+
+        // Read JSON from classpath
+        JsonNode rootNode = objectMapper.readTree(inputStream);
+
+        // Apply updates
+        if (rootNode.isObject()) {
+            updateNode((ObjectNode) rootNode, updatedData);
+        } else if (rootNode.isArray()) {
+            for (JsonNode item : rootNode) {
+                if (item.isObject()) {
+                    updateNode((ObjectNode) item, updatedData);
+                }
+            }
+        } else {
+            throw new IllegalArgumentException("Unsupported root node type in JSON: " + relativePath);
+        }
+
+        // ✅ No file writing here — we just return the updated JSON string
+        return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(rootNode);
+
+    } catch (IOException e) {
+        throw new RuntimeException("❌ Failed to update JSON payload: " + e.getMessage(), e);
     }
+}
 
 
-    public static Path resolveAppFile(String relativePath) {
-        Path workingDir = Paths.get(System.getProperty("user.dir")).resolve(relativePath);
-        if (Files.exists(workingDir)) return workingDir;
-        Path jpackagePath = Paths.get(System.getProperty("java.home"))
-                .getParent()
-                .resolve("app")
-                .resolve(relativePath);
-        if (Files.exists(jpackagePath)) return jpackagePath;
-        Path homePath = Paths.get(System.getProperty("user.home"), "SF_Lead_Creation", relativePath);
-        if (Files.exists(homePath)) return homePath;
+    // public String updatePayloadFromMap(String relativePath, Map<String, Object> updatedData) {
+    //     try {
+    //         // 🔍 Resolve the file dynamically for IDE / JAR / jpackage
+    //         Path resolvedPath = resolveAppFile(relativePath);
+    //         if (resolvedPath == null) {
+    //             throw new FileNotFoundException("❌ Payload file not found: " + relativePath);
+    //         }
 
-        // ❌ Not found anywhere
-        System.err.println("❌ File not found in any known location: " + relativePath);
-        return null;
-    }
+    //        // System.out.println("📄 Loading JSON from: " + resolvedPath.toAbsolutePath());
+
+    //         // 🔹 Read the JSON
+    //         JsonNode rootNode = objectMapper.readTree(resolvedPath.toFile());
+
+    //         // 🔹 Apply updates
+    //         if (rootNode.isObject()) {
+    //             updateNode((ObjectNode) rootNode, updatedData);
+    //         } else if (rootNode.isArray()) {
+    //             for (JsonNode item : rootNode) {
+    //                 if (item.isObject()) {
+    //                     updateNode((ObjectNode) item, updatedData);
+    //                 }
+    //             }
+    //         } else {
+    //             throw new IllegalArgumentException("Unsupported root node type in JSON: " + relativePath);
+    //         }
+
+    //         // 🔹 Write back to same file
+    //         objectMapper.writerWithDefaultPrettyPrinter().writeValue(resolvedPath.toFile(), rootNode);
+
+    //        // System.out.println("💾 Updated payload saved to: " + resolvedPath.toAbsolutePath());
+
+    //         return objectMapper.writeValueAsString(rootNode);
+
+    //     } catch (IOException e) {
+    //         throw new RuntimeException("❌ Failed to update JSON payload: " + e.getMessage(), e);
+    //     }
+    // }
+
+
+    // public static Path resolveAppFile(String relativePath) {
+    //     Path workingDir = Paths.get(System.getProperty("user.dir")).resolve(relativePath);
+    //     if (Files.exists(workingDir)) return workingDir;
+    //     Path jpackagePath = Paths.get(System.getProperty("java.home"))
+    //             .getParent()
+    //             .resolve("app")
+    //             .resolve(relativePath);
+    //     if (Files.exists(jpackagePath)) return jpackagePath;
+    //     Path homePath = Paths.get(System.getProperty("user.home"), "SF_Lead_Creation", relativePath);
+    //     if (Files.exists(homePath)) return homePath;
+
+    //     // ❌ Not found anywhere
+    //     System.err.println("❌ File not found in any known location: " + relativePath);
+    //     return null;
+    // }
 
 
 
