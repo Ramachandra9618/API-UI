@@ -59,7 +59,7 @@ public class CreateMultipleLeadsFromTheRosterTest extends BaseClass {
         System.out.println("lead input validation passed ✅");
 
         // Always generate CSV in valid base path
-        filepath = generateLeadCreationCSV(propertiesReader.getEnvironment(), customerType);
+      //  filepath = generateLeadCreationCSV(propertiesReader.getEnvironment(), customerType);
         System.out.println("📁 Report CSV created at: " + filepath);
     }
 
@@ -222,11 +222,11 @@ public class CreateMultipleLeadsFromTheRosterTest extends BaseClass {
         updateUserProperty.put("leadScriptRunDate", formatCurrentDate("dd-MM-yyyy"));
         updateProperties("userConfigurations.properties", updateUserProperty);
 
-        if (filepath != null && !filepath.isBlank()) {
-            String finalFileName = propertiesReader.getLeadCount() + "_" + customerType + "-Leads_LastAt_" + currentIndex + formatCurrentDate(" ⏰ hh.mm.a") + ".csv";
-            utilities.renamingLeadReportFile(filepath, finalFileName);
-        } else {
-            System.err.println("⚠️ No report file generated — skipping rename.");
-        }
+        // if (filepath != null && !filepath.isBlank()) {
+        //     String finalFileName = propertiesReader.getLeadCount() + "_" + customerType + "-Leads_LastAt_" + currentIndex + formatCurrentDate(" ⏰ hh.mm.a") + ".csv";
+        //     utilities.renamingLeadReportFile(filepath, finalFileName);
+        // } else {
+        //     System.err.println("⚠️ No report file generated — skipping rename.");
+        // }
     }
 }
