@@ -24,70 +24,43 @@ public class Utilities {
         return formatter.format(new Date());
     }
 
-    public synchronized static boolean updateProperties(String resourcePath, Map<String, String> propertiesToUpdate) {
-    Properties properties = new Properties();
-    Path inputPath = null;
+    private static final String CONFIG_FOLDER = System.getProperty("user.home") + "/OneDrive/Documents/API-UI";
 
+   public synchronized static boolean updateProperties(String fileName, Map<String, String> propertiesToUpdate) {
     try {
-        System.out.println("🔍 Searching for properties file: " + resourcePath);
-
-        // 1️⃣ Try working directory (IntelliJ or mvn javafx:run)
-        Path userDirPath = Paths.get(System.getProperty("user.dir"), resourcePath);
-        if (Files.exists(userDirPath)) {
-            inputPath = userDirPath;
-            System.out.println("📂 Found in working directory: " + inputPath.toAbsolutePath());
+        Path configDir = Paths.get(CONFIG_FOLDER);
+        if (!Files.exists(configDir)) {
+            Files.createDirectories(configDir);
+            System.out.println("📁 Created config directory: " + configDir.toAbsolutePath());
         }
 
-        // 2️⃣ Try jpackage app directory (runtime image’s app folder)
-        if (inputPath == null || !Files.exists(inputPath)) {
-            Path appDir = Paths.get(System.getProperty("java.home"))
-                    .getParent()
-                    .resolve("app")
-                    .resolve(resourcePath);
-            if (Files.exists(appDir)) {
-                inputPath = appDir;
-                System.out.println("📦 Found in app runtime folder: " + inputPath.toAbsolutePath());
-            }
+        Path propertiesPath = configDir.resolve(fileName);
+        System.out.println("🔍 Properties file path: " + propertiesPath.toAbsolutePath());
+
+        // Create file if it doesn't exist
+        if (!Files.exists(propertiesPath)) {
+            Files.createFile(propertiesPath);
+            System.out.println("📄 Created properties file: " + propertiesPath.toAbsolutePath());
         }
 
-        // 3️⃣ Try user home folder (backup location)
-        if (inputPath == null || !Files.exists(inputPath)) {
-            Path homePath = Paths.get(System.getProperty("user.home"), "SF_Lead_Creation", resourcePath);
-            if (Files.exists(homePath)) {
-                inputPath = homePath;
-                System.out.println("🏠 Found in user home: " + inputPath.toAbsolutePath());
-            }
+        // Load existing properties
+        Properties properties = new Properties();
+        try (InputStream input = Files.newInputStream(propertiesPath)) {
+            properties.load(input);
         }
 
-        // 4️⃣ File not found in any known location
-        if (inputPath == null || !Files.exists(inputPath)) {
-            System.err.println("❌ Properties file not found in any known location: " + resourcePath);
-            return false;
-        }
+        // Merge new values without removing existing keys
+        propertiesToUpdate.forEach(properties::setProperty);
 
-        System.out.println("📄 Loading properties from: " + inputPath.toAbsolutePath());
-
-        // 5️⃣ Load existing properties
-        try (InputStream inputStream = Files.newInputStream(inputPath)) {
-            properties.load(inputStream);
-        }
-
-        // 6️⃣ Update only the provided keys
-        System.out.println("✏️ Updating properties: " + propertiesToUpdate);
-        for (Map.Entry<String, String> entry : propertiesToUpdate.entrySet()) {
-            properties.setProperty(entry.getKey(), entry.getValue());
-        }
-
-        // 7️⃣ Write updated properties back to the same file
-        try (OutputStream output = Files.newOutputStream(inputPath)) {
+        // Save back the properties
+        try (OutputStream output = Files.newOutputStream(propertiesPath)) {
             properties.store(output, "Updated by updateProperties()");
         }
 
-        System.out.println("✅ Properties updated successfully at: " + inputPath.toAbsolutePath());
-        System.out.println("🔹 Updated Keys: " + propertiesToUpdate.keySet());
+        System.out.println("✅ Properties updated successfully: " + propertiesPath.toAbsolutePath());
         return true;
 
-    } catch (IOException e) {
+    } catch (Exception e) {
         System.err.println("❌ Failed to update properties: " + e.getMessage());
         e.printStackTrace();
         return false;

@@ -25,7 +25,7 @@ public class BaseClass extends ApiService {
         testData.clear();
 
         // Load user configuration properties
-        addToTestDataFromProperties("configuration/userConfigurations.properties", testData);
+        addToTestDataFromProperties("input/userConfigurations.properties", testData);
 
         // Read customerType and city
         customerType = (String) testData.get("customerType");

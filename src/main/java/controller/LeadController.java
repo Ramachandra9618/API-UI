@@ -43,7 +43,7 @@ public class LeadController {
         System.out.println("Received Lead Creation Request: " + request);
 
         // Update test config properties
-        updateProperties("configuration/userConfigurations.properties", Map.of(
+        updateProperties("input/userConfigurations.properties", Map.of(
                 "customerName", request.get("customerName"),
                 "environment", request.get("environment"),
                 "customerType", request.get("customerType"),

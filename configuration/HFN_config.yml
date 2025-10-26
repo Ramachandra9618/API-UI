@@ -1,9 +1,0 @@
-login_Credential:
-  preProd:
-    logged_in_user_id: "2075509"
-    dp_email: "testhfndealer@homelane.com"
-    dp_password: "123456"
-  prod:
-    logged_in_user_id: "5482733"
-    dp_email: "testhfndealer@homelane.com"
-    dp_password: "#<{Map!md5HcbDdU"
