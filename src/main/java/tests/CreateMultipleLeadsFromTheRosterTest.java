@@ -172,6 +172,10 @@ public class CreateMultipleLeadsFromTheRosterTest extends BaseClass {
         if ( isBeforeToday(propertiesReader.getFiledDate())) {
             lastProcessedLeadIndex = 1;
         }
+        System.out.println(lastProcessedLeadIndex);
+        System.out.println(propertiesReader.getLeadCount());
+        System.out.println(propertiesReader.getLeadCount() + propertiesReader.getLastProcessedIndex());
+        System.out.println("jai sri ram");
         if ((propertiesReader.getLeadCount() + propertiesReader.getLastProcessedIndex()) >= 100) {
             logger.error("❌ TotalLeadsToCreate should be less than 100. Please provide different mobileStarting prefix and lastProcessedLeadIndex reset to 0 Found: {}", propertiesReader.getLeadCount() + lastProcessedLeadIndex);
             isValid = false;

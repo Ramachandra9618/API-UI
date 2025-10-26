@@ -222,12 +222,13 @@ public class Utilities {
 
         LocalDate fileDateParsed = LocalDate.parse(filedDate, formatter);
         LocalDate today = LocalDate.now();
-
+      
         // Only before today (your logic seems incorrect earlier)
         return fileDateParsed.isBefore(today);
 
     } catch (DateTimeParseException e) {
         System.err.println("Invalid date format: [" + filedDate + "] → " + e.getMessage());
+        System.out.println("time check failed");
         return false;
     }
 }
