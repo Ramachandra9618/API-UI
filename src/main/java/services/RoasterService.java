@@ -198,11 +198,19 @@ public class RoasterService extends ApiService {
                 cookiesData
         );
         int statusCode = response.statusCode();
-        if (statusCode != 200) {
-            log.log(Level.FATAL, "⚠️ Failed to submit appointment-form. Status Code: " + statusCode);
+
+        // Consider body-level failures even if HTTP status is 200
+        Boolean successStatus = null;
+        String apiMessage = null;
+        try { successStatus = response.jsonPath().getBoolean("success_status"); } catch (Exception ignored) {}
+        try { apiMessage = response.jsonPath().getString("message"); } catch (Exception ignored) {}
+
+        if (statusCode >= 400 || (successStatus != null && !successStatus)) {
+            log.log(Level.FATAL, "⚠️ Appointment submission failed. HTTP: " + statusCode + ", success_status: " + successStatus + ", message: " + apiMessage);
             log.log(Level.FATAL, "Response: " + response.asPrettyString());
-            throw new SkipException("Skipping this test As Appointment Failed");
+            throw new SkipException("Skipping this test; appointment failed: " + (apiMessage != null ? apiMessage : "unknown"));
         }
+
         Assert.assertEquals(200, statusCode, response.asPrettyString());
     }
 
