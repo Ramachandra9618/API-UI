@@ -11,6 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import static utils.Utilities.addToTestDataFromProperties;
 
 public class BaseClass extends ApiService {
 
