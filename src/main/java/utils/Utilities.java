@@ -27,19 +27,12 @@ public class Utilities {
      // ✅ Preferred base path (auto-adjusts for local vs. cloud)
     private static final String LOCAL_CONFIG_FOLDER = System.getProperty("user.home") + "/OneDrive/Documents/API-UI/input"; // ✅ include /input
     private static final String CLOUD_CONFIG_FOLDER = System.getProperty("user.home") + "/API-UI/input"; // ✅ include /input
-    private static final String RAILWAY_VOLUME_FOLDER = "/mnt/railway/input";
-
 
     /**
      * Dynamically determines config folder depending on environment.
      */
     private static Path getConfigDir() {
-    Path railwayPath = Paths.get(RAILWAY_VOLUME_FOLDER);
-    if (Files.exists(railwayPath)) {
-        System.out.println("☁️ Using Railway volume config directory: " + railwayPath.toAbsolutePath());
-        return railwayPath;
-    }
-
+   
     Path localPath = Paths.get(LOCAL_CONFIG_FOLDER);
     if (Files.exists(localPath)) {
         System.out.println("💻 Using local config directory: " + localPath.toAbsolutePath());
@@ -86,6 +79,8 @@ public class Utilities {
                 // Create empty file only once
                 Files.createFile(filePath);
                 System.out.println("🆕 Created new properties file: " + filePath.toAbsolutePath());
+                propertiesToUpdate.put("lastProcessedLeadIndex", "1");
+                propertiesToUpdate.put("leadScriptRunDate", formatCurrentDate("yyyy-MM-dd").toString());   
             }
 
             // Print current values before update
