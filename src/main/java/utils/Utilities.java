@@ -105,12 +105,32 @@ public class Utilities {
     }
 
     public static boolean isBeforeToday(String filedDate) {
+        // Guard against null/blank values (cloud may pass empty strings)
+        if (filedDate == null) return false;
+        String s = filedDate.trim();
+        if (s.isEmpty()) return false;
+
         try {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
-            LocalDate fileDateParsed = LocalDate.parse(filedDate, formatter);
+            LocalDate fileDateParsed;
+
+            // Try primary format dd-MM-yyyy
+            try {
+                fileDateParsed = LocalDate.parse(s, formatter);
+            } catch (DateTimeParseException e1) {
+                // Fallback: ISO date yyyy-MM-dd
+                try {
+                    fileDateParsed = LocalDate.parse(s, DateTimeFormatter.ISO_LOCAL_DATE);
+                } catch (DateTimeParseException e2) {
+                    System.err.println("Invalid date format: " + filedDate);
+                    return false;
+                }
+            }
+
             LocalDate today = LocalDate.now();
+            // Keep original semantics: return true if date is not today
             return fileDateParsed.isBefore(today) || fileDateParsed.isAfter(today);
-        } catch (DateTimeParseException e) {
+        } catch (Exception e) {
             System.err.println("Invalid date format: " + filedDate);
             return false;
         }
