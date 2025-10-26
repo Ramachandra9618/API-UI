@@ -197,7 +197,7 @@ public class CreateMultipleLeadsFromTheRosterTest extends BaseClass {
 
         updateUserProperty.put("lastProcessedLeadIndex", String.valueOf(--currentIndex));
         updateUserProperty.put("leadScriptRunDate", formatCurrentDate("dd-MM-yyyy"));
-        updateProperties("input/userConfigurations.properties", updateUserProperty);
+        updateProperties("userConfigurations.properties", updateUserProperty);
         
         String finalFileName = propertiesReader.getLeadCount() + "_" + customerType + "-Leads_LastAt_" + currentIndex + formatCurrentDate(" ⏰ hh.mm.a") + ".csv";
         utilities.renamingLeadReportFile(filepath, finalFileName);
