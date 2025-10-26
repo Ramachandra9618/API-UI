@@ -24,67 +24,76 @@ public class Utilities {
         return formatter.format(new Date());
     }
 
-    public synchronized static void updateProperties(String resourcePath, Map<String, String> propertiesToUpdate) {
-        Properties properties = new Properties();
-        Path inputPath = null;
+    public synchronized static boolean updateProperties(String resourcePath, Map<String, String> propertiesToUpdate) {
+    Properties properties = new Properties();
+    Path inputPath = null;
 
-        try {
-            // 1️⃣ Try working directory (for IntelliJ or mvn javafx:run)
-            Path userDirPath = Paths.get(System.getProperty("user.dir"), resourcePath);
-            if (Files.exists(userDirPath)) {
-                inputPath = userDirPath;
-            }
+    try {
+        System.out.println("🔍 Searching for properties file: " + resourcePath);
 
-            // 2️⃣ Try jpackage app directory (runtime image's app folder)
-            if (inputPath == null || !Files.exists(inputPath)) {
-                Path appDir = Paths.get(System.getProperty("java.home"))
-                        .getParent()
-                        .resolve("app")
-                        .resolve(resourcePath);
-
-                if (Files.exists(appDir)) {
-                    inputPath = appDir;
-                }
-            }
-
-            // 3️⃣ Fallback: user home folder (if user copy exists)
-            if (inputPath == null || !Files.exists(inputPath)) {
-                Path homePath = Paths.get(System.getProperty("user.home"), "SF_Lead_Creation", resourcePath);
-                if (Files.exists(homePath)) {
-                    inputPath = homePath;
-                }
-            }
-
-            // 4️⃣ File not found in any of the locations
-            if (inputPath == null || !Files.exists(inputPath)) {
-                System.err.println("❌ Properties file not found in any known location: " + resourcePath);
-                return;
-            }
-
-            System.out.println("📄 Loading properties from: " + inputPath.toAbsolutePath());
-
-            // 5️⃣ Load existing properties
-            try (InputStream inputStream = Files.newInputStream(inputPath)) {
-                properties.load(inputStream);
-            }
-
-            // 6️⃣ Update properties
-            for (Map.Entry<String, String> entry : propertiesToUpdate.entrySet()) {
-                properties.setProperty(entry.getKey(), entry.getValue());
-            }
-
-            // 7️⃣ Write updated values back to SAME file
-            try (OutputStream output = Files.newOutputStream(inputPath)) {
-                properties.store(output, "Updated properties");
-            }
-
-            //   System.out.println("✅ Properties updated successfully at: " + inputPath.toAbsolutePath());
-
-        } catch (IOException e) {
-            System.err.println("❌ Failed to update properties: " + e.getMessage());
-            e.printStackTrace();
+        // 1️⃣ Try working directory (IntelliJ or mvn javafx:run)
+        Path userDirPath = Paths.get(System.getProperty("user.dir"), resourcePath);
+        if (Files.exists(userDirPath)) {
+            inputPath = userDirPath;
+            System.out.println("📂 Found in working directory: " + inputPath.toAbsolutePath());
         }
+
+        // 2️⃣ Try jpackage app directory (runtime image’s app folder)
+        if (inputPath == null || !Files.exists(inputPath)) {
+            Path appDir = Paths.get(System.getProperty("java.home"))
+                    .getParent()
+                    .resolve("app")
+                    .resolve(resourcePath);
+            if (Files.exists(appDir)) {
+                inputPath = appDir;
+                System.out.println("📦 Found in app runtime folder: " + inputPath.toAbsolutePath());
+            }
+        }
+
+        // 3️⃣ Try user home folder (backup location)
+        if (inputPath == null || !Files.exists(inputPath)) {
+            Path homePath = Paths.get(System.getProperty("user.home"), "SF_Lead_Creation", resourcePath);
+            if (Files.exists(homePath)) {
+                inputPath = homePath;
+                System.out.println("🏠 Found in user home: " + inputPath.toAbsolutePath());
+            }
+        }
+
+        // 4️⃣ File not found in any known location
+        if (inputPath == null || !Files.exists(inputPath)) {
+            System.err.println("❌ Properties file not found in any known location: " + resourcePath);
+            return false;
+        }
+
+        System.out.println("📄 Loading properties from: " + inputPath.toAbsolutePath());
+
+        // 5️⃣ Load existing properties
+        try (InputStream inputStream = Files.newInputStream(inputPath)) {
+            properties.load(inputStream);
+        }
+
+        // 6️⃣ Update only the provided keys
+        System.out.println("✏️ Updating properties: " + propertiesToUpdate);
+        for (Map.Entry<String, String> entry : propertiesToUpdate.entrySet()) {
+            properties.setProperty(entry.getKey(), entry.getValue());
+        }
+
+        // 7️⃣ Write updated properties back to the same file
+        try (OutputStream output = Files.newOutputStream(inputPath)) {
+            properties.store(output, "Updated by updateProperties()");
+        }
+
+        System.out.println("✅ Properties updated successfully at: " + inputPath.toAbsolutePath());
+        System.out.println("🔹 Updated Keys: " + propertiesToUpdate.keySet());
+        return true;
+
+    } catch (IOException e) {
+        System.err.println("❌ Failed to update properties: " + e.getMessage());
+        e.printStackTrace();
+        return false;
     }
+}
+
 
     public void appendTestResults(String[] testResults, String filepath) {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(filepath, true))) {
