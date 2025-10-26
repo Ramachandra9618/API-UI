@@ -24,59 +24,97 @@ public class Utilities {
         return formatter.format(new Date());
     }
 
-    private static final String CONFIG_FOLDER = Optional.ofNullable(System.getenv("CONFIG_DIR")).orElse(System.getProperty("user.dir"));
+     // ✅ Preferred base path (auto-adjusts for local vs. cloud)
+    private static final String LOCAL_CONFIG_FOLDER = System.getProperty("user.home") + "/OneDrive/Documents/API-UI/input";
+    private static final String CLOUD_CONFIG_FOLDER = System.getProperty("user.home") + "/API-UI/input";
 
-   public synchronized static boolean updateProperties(String fileName, Map<String, String> propertiesToUpdate) {
-    try {
-        // Normalize resource path (remove leading slashes for cross-platform safety)
-        String normalized = fileName.replaceFirst("^[/\\\\]+", "");
-
-        // Base directory for resolving relative paths (cloud-safe)
-        Path baseDir = Paths.get(CONFIG_FOLDER);
-
-        // Resolve target path: use absolute if provided, else under baseDir
-        Path targetPath = Paths.get(normalized);
-        Path propertiesPath = targetPath.isAbsolute() ? targetPath : baseDir.resolve(targetPath);
-
-        // Ensure parent directories exist
-        Path parent = propertiesPath.getParent();
-        if (parent != null && !Files.exists(parent)) {
-            Files.createDirectories(parent);
-            System.out.println("📁 Ensured directory exists: " + parent.toAbsolutePath());
+    /**
+     * Dynamically determines config folder depending on environment.
+     */
+    private static Path getConfigDir() {
+        Path localPath = Paths.get(LOCAL_CONFIG_FOLDER);
+        if (Files.exists(localPath)) {
+            System.out.println("📂 Using local config directory: " + localPath.toAbsolutePath());
+            return localPath;
         }
 
-        System.out.println("🔍 Properties file path: " + propertiesPath.toAbsolutePath());
-
-        // Create file if it doesn't exist
-        if (!Files.exists(propertiesPath)) {
-            Files.createFile(propertiesPath);
-            System.out.println("📄 Created properties file: " + propertiesPath.toAbsolutePath());
+        Path cloudPath = Paths.get(CLOUD_CONFIG_FOLDER);
+        try {
+            if (!Files.exists(cloudPath)) {
+                Files.createDirectories(cloudPath);
+                System.out.println("📁 Created cloud config directory: " + cloudPath.toAbsolutePath());
+            } else {
+                System.out.println("📂 Using existing cloud config directory: " + cloudPath.toAbsolutePath());
+            }
+        } catch (IOException e) {
+            System.err.println("❌ Failed to create cloud config directory: " + e.getMessage());
         }
-
-        // Load existing properties
-        Properties properties = new Properties();
-        try (InputStream input = Files.newInputStream(propertiesPath)) {
-            properties.load(input);
-        }
-
-        // Merge new values without removing existing keys
-        propertiesToUpdate.forEach(properties::setProperty);
-
-        // Save back the properties
-        try (OutputStream output = Files.newOutputStream(propertiesPath)) {
-            properties.store(output, "Updated by updateProperties()");
-        }
-
-        System.out.println("✅ Properties updated successfully: " + propertiesPath.toAbsolutePath());
-        return true;
-
-    } catch (Exception e) {
-        System.err.println("❌ Failed to update properties: " + e.getMessage());
-        e.printStackTrace();
-        return false;
+        return cloudPath;
     }
-}
 
+    /**
+     * Updates (or creates) a .properties file with given key-value pairs.
+     */
+    public synchronized static boolean updateProperties(String fileName, Map<String, String> propertiesToUpdate) {
+        Properties props = new Properties();
+        Path configDir = getConfigDir();
+        Path filePath = configDir.resolve(fileName);
+
+        try {
+            // ✅ Load existing properties if file already exists
+            if (Files.exists(filePath)) {
+                try (InputStream in = Files.newInputStream(filePath)) {
+                    props.load(in);
+                    System.out.println("📄 Loaded existing properties from: " + filePath.toAbsolutePath());
+                }
+            } else {
+                Files.createFile(filePath);
+                System.out.println("🆕 Created new properties file: " + filePath.toAbsolutePath());
+            }
+
+            // ✅ Update values
+            propertiesToUpdate.forEach(props::setProperty);
+
+            // ✅ Save file
+            try (OutputStream out = Files.newOutputStream(filePath)) {
+                props.store(out, "Updated by ConfigUtils");
+            }
+
+            System.out.println("✅ Properties updated successfully: " + filePath.toAbsolutePath());
+            return true;
+
+        } catch (IOException e) {
+            System.err.println("❌ Error updating properties file: " + e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Reads properties file into a map.
+     */
+    public synchronized static Map<String, String> readProperties(String fileName) {
+        Map<String, String> result = new HashMap<>();
+        Path configDir = getConfigDir();
+        Path filePath = configDir.resolve(fileName);
+
+        if (!Files.exists(filePath)) {
+            System.err.println("⚠️ Properties file not found: " + filePath.toAbsolutePath());
+            return result;
+        }
+
+        try (InputStream in = Files.newInputStream(filePath)) {
+            Properties props = new Properties();
+            props.load(in);
+            for (String key : props.stringPropertyNames()) {
+                result.put(key, props.getProperty(key));
+            }
+            System.out.println("📄 Loaded properties from: " + filePath.toAbsolutePath());
+        } catch (IOException e) {
+            System.err.println("❌ Error reading properties: " + e.getMessage());
+        }
+
+        return result;
+    }
 
     public void appendTestResults(String[] testResults, String filepath) {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(filepath, true))) {
