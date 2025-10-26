@@ -25,8 +25,10 @@ public class Utilities {
     }
 
      // ✅ Preferred base path (auto-adjusts for local vs. cloud)
-    private static final String LOCAL_CONFIG_FOLDER = System.getProperty("user.home") + "/OneDrive/Documents/API-UI";
-    private static final String CLOUD_CONFIG_FOLDER = System.getProperty("user.home") + "/API-UI";
+   private static final String LOCAL_CONFIG_FOLDER =
+            System.getProperty("user.home") + "/OneDrive/Documents/API-UI/input"; // ✅ include /input
+    private static final String CLOUD_CONFIG_FOLDER =
+            System.getProperty("user.home") + "/API-UI/input"; // ✅ include /input
 
     /**
      * Dynamically determines config folder depending on environment.
@@ -34,7 +36,7 @@ public class Utilities {
     private static Path getConfigDir() {
         Path localPath = Paths.get(LOCAL_CONFIG_FOLDER);
         if (Files.exists(localPath)) {
-            System.out.println("📂 Using local config directory: " + localPath.toAbsolutePath());
+            System.out.println("💻 Using local config directory: " + localPath.toAbsolutePath());
             return localPath;
         }
 
@@ -42,9 +44,9 @@ public class Utilities {
         try {
             if (!Files.exists(cloudPath)) {
                 Files.createDirectories(cloudPath);
-                System.out.println("📁 Created cloud config directory: " + cloudPath.toAbsolutePath());
+                System.out.println("☁️ Created cloud config directory: " + cloudPath.toAbsolutePath());
             } else {
-                System.out.println("📂 Using existing cloud config directory: " + cloudPath.toAbsolutePath());
+                System.out.println("☁️ Using existing cloud config directory: " + cloudPath.toAbsolutePath());
             }
         } catch (IOException e) {
             System.err.println("❌ Failed to create cloud config directory: " + e.getMessage());
@@ -53,7 +55,8 @@ public class Utilities {
     }
 
     /**
-     * Updates (or creates) a .properties file with given key-value pairs.
+     * Updates (or creates once) a .properties file with given key-value pairs.
+     * ✅ Never recreates file — only updates or adds keys.
      */
     public synchronized static boolean updateProperties(String fileName, Map<String, String> propertiesToUpdate) {
         Properties props = new Properties();
@@ -61,21 +64,27 @@ public class Utilities {
         Path filePath = configDir.resolve(fileName);
 
         try {
-            // ✅ Load existing properties if file already exists
+            // ✅ Ensure directory exists
+            if (!Files.exists(configDir)) {
+                Files.createDirectories(configDir);
+            }
+
+            // ✅ Load existing properties if file exists
             if (Files.exists(filePath)) {
                 try (InputStream in = Files.newInputStream(filePath)) {
                     props.load(in);
                     System.out.println("📄 Loaded existing properties from: " + filePath.toAbsolutePath());
                 }
             } else {
+                // Create empty file only once
                 Files.createFile(filePath);
                 System.out.println("🆕 Created new properties file: " + filePath.toAbsolutePath());
             }
 
-            // ✅ Update values
+            // ✅ Apply updates (overwrites same keys, keeps old ones)
             propertiesToUpdate.forEach(props::setProperty);
 
-            // ✅ Save file
+            // ✅ Save without deleting existing data
             try (OutputStream out = Files.newOutputStream(filePath)) {
                 props.store(out, "Updated by ConfigUtils");
             }
@@ -115,7 +124,6 @@ public class Utilities {
 
         return result;
     }
-
     public void appendTestResults(String[] testResults, String filepath) {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(filepath, true))) {
 
