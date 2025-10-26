@@ -144,8 +144,20 @@ public class BaseClass extends ApiService {
         Properties prop = new Properties();
         InputStream inputStream = null;
         try {
-            inputStream = openClasspathStream(fileName);
-            if (inputStream == null) return;
+            // Try to locate file in filesystem first (for cloud and local compatibility)
+            Path filePath = locateFile(fileName);
+            if (filePath != null) {
+                inputStream = Files.newInputStream(filePath);
+                log.info("📄 Loading properties from filesystem: {}", filePath.toAbsolutePath());
+            } else {
+                // Fallback to classpath if file not found in filesystem
+                inputStream = openClasspathStream(fileName);
+                if (inputStream == null) {
+                    log.error("❌ Properties file not found in filesystem or classpath: {}", fileName);
+                    return;
+                }
+            }
+            
             prop.load(inputStream);
             for (String name : prop.stringPropertyNames()) {
                 testData.put(name, prop.getProperty(name));
