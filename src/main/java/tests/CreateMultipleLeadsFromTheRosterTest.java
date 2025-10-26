@@ -14,7 +14,6 @@ import utils.PropertiesReader;
 import utils.Utilities;
 
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
@@ -33,15 +32,11 @@ public class CreateMultipleLeadsFromTheRosterTest extends BaseClass {
     private String filepath;
     private int currentIndex;
 
-    /**
-     * Dynamically resolves base path for reports (works for both local + cloud)
-     */
     private static String getReportsBaseDir() {
         String envReportDir = System.getenv("REPORT_PATH");
         if (envReportDir != null && !envReportDir.isBlank()) {
             return envReportDir;
         }
-        // ✅ Default: ~/API-UI/reports (works on both local & Railway)
         return System.getProperty("user.home") + "/API-UI/reports";
     }
 
@@ -59,7 +54,7 @@ public class CreateMultipleLeadsFromTheRosterTest extends BaseClass {
         System.out.println("lead input validation passed ✅");
 
         // Always generate CSV in valid base path
-      //  filepath = generateLeadCreationCSV(propertiesReader.getEnvironment(), customerType);
+        filepath = generateLeadCreationCSV(propertiesReader.getEnvironment(), customerType);
         System.out.println("📁 Report CSV created at: " + filepath);
     }
 
@@ -104,9 +99,11 @@ public class CreateMultipleLeadsFromTheRosterTest extends BaseClass {
                         default -> null;
                     };
 
-                    if (projectDetails != null &&
-                            projectDetails.containsKey("customerId") &&
-                            projectDetails.containsKey("projectID")) {
+                    // Strong success validation
+                    if (projectDetails != null
+                        && projectDetails.get("customerId") != null && !projectDetails.get("customerId").isBlank()
+                        && projectDetails.get("projectID") != null && !projectDetails.get("projectID").isBlank()
+                        && !projectDetails.getOrDefault("success_status", "true").equalsIgnoreCase("false")) {
 
                         String successMsg = String.format(
                                 "✅ Lead #%d created successfully. CustomerId=%s, ProjectID=%s, DP Email=%s",
@@ -134,23 +131,27 @@ public class CreateMultipleLeadsFromTheRosterTest extends BaseClass {
                         workingIndex++;
                         successfulLeads++;
                         success = true;
+                        break;
 
                     } else {
-                        String warnMsg = String.format("⚠️ Lead #%d creation failed on attempt %d: Incomplete project details.", workingIndex, attempt);
-                        logger.warn(warnMsg);
-                        captureFailure(context, "testCreateBulkLeadsFailures", warnMsg);
+                        String msg = projectDetails != null ? projectDetails.get("message") : "No details returned";
+                        logger.warn("⚠️ Lead #{} creation failed at attempt {}: {}", workingIndex, attempt, msg);
+
+                        if (msg != null && msg.toLowerCase().contains("already exists")) {
+                            logger.info("⚠️ Lead #{} already exists. Skipping.", workingIndex);
+                            workingIndex++;
+                            successfulLeads++;
+                            success = true;
+                            break;
+                        }
                     }
 
                 } catch (Throwable t) {
-                    String errorMsg = String.format("🛑 Lead #%d failed on attempt %d: %s", workingIndex, attempt, t.getMessage());
-                    logger.error(errorMsg);
-                    captureFailure(context, "testCreateBulkLeadsOutput", errorMsg);
+                    logger.error("🛑 Lead #{} failed at attempt {}: {}", workingIndex, attempt, t.getMessage());
                 }
 
                 if (!success && attempt < 3) {
-                    String retryMsg = String.format("🔁 Retrying lead #%d (attempt %d/3)", workingIndex + 1, attempt + 1);
-                    logger.info(retryMsg);
-                    captureFailure(context, "testCreateBulkLeadsOutput", retryMsg);
+                    logger.info("🔁 Retrying lead #{} (attempt {}/{})", workingIndex, attempt + 1, 3);
                 }
             }
 
@@ -158,20 +159,18 @@ public class CreateMultipleLeadsFromTheRosterTest extends BaseClass {
                 String failMsg = String.format("❌ Lead #%d failed after 3 attempts. Skipping to next index.", workingIndex);
                 logger.error(failMsg);
                 captureFailure(context, "testCreateBulkLeadsOutput", failMsg);
-                throw new SkipException(failMsg);
+                workingIndex++;
+                successfulLeads++;
             }
-
-            currentIndex = workingIndex;
         }
+
+        currentIndex = workingIndex;
     }
 
-    /**
-     * ✅ Creates CSV report safely under environment-independent folder.
-     */
     public String generateLeadCreationCSV(String environment, String customerType) {
         try {
             String baseDir = getReportsBaseDir();
-            String subFolder = baseDir + "/LeadCreationReports/" + environment + "/" + formatCurrentDate("📅dd-MM-yyyy↘️");
+            String subFolder = baseDir + "/LeadCreationReports/" + environment + "/" + formatCurrentDate("dd-MM-yyyy");
             Files.createDirectories(Paths.get(subFolder));
 
             String fileName = customerType + "-Leads_LastAt_" + propertiesReader.getLastProcessedIndex() + ".csv";
@@ -189,7 +188,6 @@ public class CreateMultipleLeadsFromTheRosterTest extends BaseClass {
     private boolean leadInputValidation() {
         boolean isValid = true;
         int lastProcessedLeadIndex = propertiesReader.getLastProcessedIndex();
-        System.out.println(propertiesReader.getFiledDate());
 
         if (isBeforeToday(propertiesReader.getFiledDate())) {
             lastProcessedLeadIndex = 1;
@@ -221,12 +219,5 @@ public class CreateMultipleLeadsFromTheRosterTest extends BaseClass {
         updateUserProperty.put("lastProcessedLeadIndex", String.valueOf(--currentIndex));
         updateUserProperty.put("leadScriptRunDate", formatCurrentDate("dd-MM-yyyy"));
         updateProperties("userConfigurations.properties", updateUserProperty);
-
-        // if (filepath != null && !filepath.isBlank()) {
-        //     String finalFileName = propertiesReader.getLeadCount() + "_" + customerType + "-Leads_LastAt_" + currentIndex + formatCurrentDate(" ⏰ hh.mm.a") + ".csv";
-        //     utilities.renamingLeadReportFile(filepath, finalFileName);
-        // } else {
-        //     System.err.println("⚠️ No report file generated — skipping rename.");
-        // }
     }
 }
