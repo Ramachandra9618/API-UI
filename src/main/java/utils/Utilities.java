@@ -13,6 +13,11 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
+import org.yaml.snakeyaml.Yaml;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class Utilities {
     private static final Logger log = LogManager.getLogger(Utilities.class);
@@ -145,7 +150,7 @@ public class Utilities {
         return result;
     }
 
-    public synchronized static void addToTestDataFromProperties(String fileName, Map<String, Object> testData) {
+ public synchronized static Map<String, Object> addToTestDataFromProperties(String fileName, Map<String, Object> testData) {
     Properties prop = new Properties();
     Path filePath = null;
 
@@ -169,7 +174,7 @@ public class Utilities {
 
         if (inputStream == null) {
             log.error("❌ Properties file not found in local, cloud, or classpath: {}", fileName);
-            return;
+            return testData; // ✅ return input map even if file not found
         }
 
         prop.load(inputStream);
@@ -183,7 +188,10 @@ public class Utilities {
     } catch (IOException e) {
         log.error("❌ Failed to read properties {}: {}", fileName, e.getMessage(), e);
     }
+
+    return testData; // ✅ return the updated map
 }
+
 
     
     public void appendTestResults(String[] testResults, String filepath) {
@@ -482,6 +490,121 @@ public class Utilities {
             }
         }
         return stream;
+    }
+
+    public static Map<String, Object> addToTestDataFromYml(String fileName, Map<String, Object> testData) {
+    Yaml yaml = new Yaml();
+    try (InputStream inputStream = openClasspathStream(fileName)) { // try-with-resources
+        if (inputStream == null) {
+            log.warn("⚠️ YAML file {} not found in classpath", fileName);
+            return testData;
+        }
+
+        Map<String, Object> yamlData = yaml.load(inputStream);
+        if (yamlData != null) {
+            testData.putAll(yamlData);
+            log.info("✅ Loaded YAML test data from {}", fileName);
+        } else {
+            log.warn("⚠️ YAML file {} was empty or invalid", fileName);
+        }
+    } catch (Exception e) {
+        log.error("❌ Failed to read YAML {}: {}", fileName, e.getMessage(), e);
+    }
+    return testData;
+}
+
+ public static Map<String, Object> loadStandardConfig(String customerType, Map<String, Object> testData) {
+    Map<String, Object> updatedTestData = new HashMap<>();
+        String configFile = switch (customerType) {
+            case "HL", "LUXE", "HFN" -> "configuration/HL_standardConfigurations.yml";
+            case "DC" -> "configuration/DC_standardConfigurations.yml";
+            default -> null;
+        };
+        if (configFile != null) {
+         updatedTestData =   addToTestDataFromYml(configFile, testData);
+        } else {
+            log.warn("Unknown customer type: {}", customerType);
+        }
+        return updatedTestData;
+    }
+
+    public static Map<String, Object> loadCustomerConfig(String customerType, Map<String, Object> testData) {
+        Map<String, Object> updatedTestData = new HashMap<>();
+        String configFile = switch (customerType) {
+            case "HL", "LUXE" -> "configuration/HL_config.yml";
+            case "HFN" -> "configuration/HFN_config.yml";
+            case "DC" -> "configuration/DC_config.yml";
+            default -> null;
+        };
+        if (configFile != null) {
+            updatedTestData = addToTestDataFromYml(configFile, testData);
+        } else {
+            log.warn("Unknown customer type: {}", customerType);
+        }
+        return updatedTestData;
+    }
+
+    public static Map<String, Object> loadCityConfig(String citycode, Map<String, Object> testData) {
+        Map<String, Object> updatedTestData = new HashMap<>();
+        String cityFile = switch (citycode) {
+            case "1" -> "configuration/CitiesData/homelane/1-Bengaluru.properties";
+            case "2" -> "configuration/CitiesData/homelane/2-Chennai.properties";
+            case "3" -> "configuration/CitiesData/homelane/3-Mumbai.properties";
+            case "4" -> "configuration/CitiesData/homelane/4-Kolkata.properties";
+            case "5" -> "configuration/CitiesData/homelane/5-Kochi.properties";
+            case "6" -> "configuration/CitiesData/homelane/6-Visakhapatnam.properties";
+            case "7" -> "configuration/CitiesData/homelane/7-Delhi.properties";
+            case "8" -> "configuration/CitiesData/homelane/8-Hyderabad.properties";
+            case "9" -> "configuration/CitiesData/homelane/9-Gurgaon.properties";
+            case "10" -> "configuration/CitiesData/homelane/10-Pune.properties";
+            case "11" -> "configuration/CitiesData/homelane/11-Thane.properties";
+            case "12" -> "configuration/CitiesData/homelane/12-Lucknow.properties";
+            case "13" -> "configuration/CitiesData/homelane/13-Mangalore.properties";
+            case "14" -> "configuration/CitiesData/homelane/14-Mysore.properties";
+            case "15" -> "configuration/CitiesData/homelane/15-Patna.properties";
+            case "16" -> "configuration/CitiesData/franchise/16-Thirupathi.properties";
+            case "17" -> "configuration/CitiesData/franchise/17-Guwahati.properties";
+            case "18" -> "configuration/CitiesData/franchise/18-Vijayawada.properties";
+            case "19" -> "configuration/CitiesData/franchise/19-Nizamabad.properties";
+            case "20" -> "configuration/CitiesData/franchise/20-Shivamogga.properties";
+            case "21" -> "configuration/CitiesData/franchise/21-Siliguri.properties";
+            case "22" -> "configuration/CitiesData/franchise/22-Trivendrum.properties";
+            case "23" -> "configuration/CitiesData/franchise/23-Warangal.properties";
+            case "24" -> "configuration/CitiesData/franchise/24-Karimnagar.properties";
+            case "25" -> "configuration/CitiesData/franchise/25-Jamshedpur.properties";
+            case "26" -> "configuration/CitiesData/homelane/26-Noida.properties";
+            case "27" -> "configuration/CitiesData/homelane/27-Coimbatore.properties";
+            case "28" -> "configuration/CitiesData/homelane/28-Bhubaneswar.properties";
+            case "29" -> "configuration/CitiesData/homelane/29-Salem.properties";
+            case "30" -> "configuration/CitiesData/homelane/30-Nagpur.properties";
+            case "31" -> "configuration/CitiesData/homelane/31-Surat.properties";
+            case "32" -> "configuration/CitiesData/homelane/32-Ranchi.properties";
+            case "33" -> "configuration/CitiesData/homelane/33-Ghaziabad.properties";
+            case "34" -> "configuration/CitiesData/homelane/34-Nashik.properties";
+            case "35" -> "configuration/CitiesData/homelane/35-Madurai.properties";
+            case "36" -> "configuration/CitiesData/homelane/36-Tiruchirappalli.properties";
+            case "37" -> "configuration/CitiesData/homelane/37-Jaipur.properties";
+            case "38" -> "configuration/CitiesData/homelane/38-Ahmedabad.properties";
+            default -> null;
+        };
+        if (cityFile != null) {
+            updatedTestData = addToTestDataFromProperties(cityFile, testData);
+        } else {
+            log.warn("Unknown city code: {}", citycode);
+        }
+        return updatedTestData; 
+    }
+
+
+       private static InputStream openClasspathStream(String fileName) {
+        String cpName = fileName.startsWith("/") ? fileName.substring(1) : fileName;
+        InputStream is = Utilities.class.getClassLoader().getResourceAsStream(cpName);
+        if (is == null) {
+            log.error("❌ Resource not found on classpath: {}", cpName);
+        } else {
+            System.out.println("📄 Loading from classpath: " + cpName);
+        }
+        return is;
     }
 }
 

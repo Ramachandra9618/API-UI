@@ -14,7 +14,9 @@ import org.testng.SkipException;
 import payloadHelper.RoasterPayloadHelper;
 import utils.PropertiesReader;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static configurator.BaseClass.testData;
@@ -50,7 +52,6 @@ public class RoasterService extends ApiService {
                 log.info("Initializing RoasterService for environment: {}", environment);
 
                 cookiesData = getCookieData(dp_email, dp_password);
-
                 if (cookiesData != null && cookiesData.containsKey("django_access_token")) {
                     token = cookiesData.get("django_access_token");
                     log.info("✅ RoasterService initialized successfully with new token.");
@@ -63,11 +64,6 @@ public class RoasterService extends ApiService {
             }
     }
 
-    private boolean isTokenValidForCurrentEnv() {
-        if (token == null || roasterBaseUrl == null) return false;
-        // Basic validation — you can refine based on your setup
-        return roasterBaseUrl.toLowerCase().contains(environment.toLowerCase());
-    }
 
     public static Map<String, String> commonHeaders() {
         Map<String, String> headers = new HashMap<>();
@@ -411,5 +407,20 @@ public class RoasterService extends ApiService {
         payLoad.put("projectId", projectId);
         response = invokePostRequest(baseURl + "/security/testUrl", payLoad, "");
         return response.asPrettyString();
+    }
+
+    public List<Map<String,String>> getShowroomList(){
+        System.out.println(commonHeaders());
+        System.out.println("Showroom List API: "+roasterBaseUrl+"/apis/Customer_detail_v2/getShowroomsList?city_specific=true");
+        response = invokeGetRequest(roasterBaseUrl+"/apis/Customer_detail_v2/getShowroomsList?city_specific=true", commonHeaders());
+        Assert.assertEquals(200, response.getStatusCode(),response.asPrettyString());
+        List<Map<String,String>> listOfShowrooms = response.jsonPath().getList("");
+        List<Map<String,String>> result =  new ArrayList<>();
+        // for (Map<String,String> showroom : listOfShowrooms){
+        //      if (showroom.get("city_name").equalsIgnoreCase(cityName)){
+        //          result.add(showroom);
+        //      }
+        // }
+      return listOfShowrooms;
     }
 }

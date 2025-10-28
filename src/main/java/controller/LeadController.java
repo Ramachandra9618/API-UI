@@ -49,7 +49,8 @@ public class LeadController {
         "customerType", request.get("customerType"),
         "totalLeadsToCreate", request.get("noOfLeads"),
         "userSelectedCityProperty", request.get("userSelectedCityProperty"),
-        "mobileNoStarting2digitPrefix", request.get("mobileNoStarting2digitPrefix")
+        "mobileNoStarting2digitPrefix", request.get("mobileNoStarting2digitPrefix"),
+        "showroomId", request.getOrDefault("showroomId", null)
 )));
 
         Map<String, Object> response = new HashMap<>();

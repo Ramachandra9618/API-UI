@@ -85,7 +85,7 @@ public class PropertiesReader {
         logged_in_user_id = loginData.getOrDefault("logged_in_user_id", "");
         dp_email = loginData.getOrDefault("dp_email", "");
         dp_password = loginData.getOrDefault("dp_password", "");
-        appointment_venue = String.valueOf(testData.getOrDefault(env + "Appointment_venue", ""));
+        appointment_venue = String.valueOf(testData.get("showroomId")!=null? testData.get("showroomId") : testData.getOrDefault(env + "Appointment_venue", ""));
 
         if (customerType.equalsIgnoreCase("DC")) {
             sf_url = loginData.getOrDefault("SFurl", "");

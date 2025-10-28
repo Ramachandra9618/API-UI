@@ -158,6 +158,7 @@ public class CreateMultipleLeadsFromTheRosterTest extends BaseClass {
             if (!success) {
                 String failMsg = String.format("❌ Lead #%d failed after 3 attempts. Skipping to next index.", workingIndex);
                 logger.error(failMsg);
+                captureFailure(context, "failures",failMsg);
                 captureFailure(context, "testCreateBulkLeadsOutput", failMsg);
                 workingIndex++;
                 successfulLeads++;
