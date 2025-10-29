@@ -18,8 +18,9 @@ public class RoasterPayloadHelper {
     PropertiesReader propertiesReader = new PropertiesReader(testData);
     Map<String, Object> updateData = new HashMap<>();
     String filePath;
-    String customerType = (String) testData.get("customerType");
-    String environment = (String) testData.get("environment");
+    String customerType = propertiesReader.getCustomerType();
+    String environment = propertiesReader.getEnvironment();
+    String appointment_venue = propertiesReader.getAppointment_venue();
 
     public Map<String, Object> getCustomerAndPropertyDetailsPayload(String mobileNumber,String email, int count, Map<String, Object> testData) {
         Map<String, Object> body = new HashMap<>();
@@ -52,7 +53,7 @@ public class RoasterPayloadHelper {
         body.put("possession_month", Utilities.getTomorrowDate());
         body.put("property_status", "New");
         if (customerType.equalsIgnoreCase("HFN")){
-            body.put("hfn_showroom",environment.equalsIgnoreCase("prod")? testData.get("prodHfn_showroom"):testData.get("preProdHfn_showroom"));
+            body.put("hfn_showroom",appointment_venue);
         }else {
             body.put("iron_man_id", testData.get("iron_man_id"));
         }
@@ -112,7 +113,11 @@ public class RoasterPayloadHelper {
         dataMap.put("ins_city", testData.get("property_city"));
         dataMap.put("user_ins_city", testData.get("property_city"));
         dataMap.put("pincode2", testData.get("pincode"));
-        dataMap.put("insShowroom", propertiesReader.getAppointment_venue().toUpperCase());
+        if (customerType.equalsIgnoreCase("HFN") && environment.equalsIgnoreCase("prod")){
+            dataMap.put("insShowroom", propertiesReader.getAppointment_venue().toUpperCase());
+        }else{
+            dataMap.put("insShowroom", "1");
+        }
         dataMap.put("project_name", testData.get("project_name"));
         dataMap.put("flat_house_no", 11);
         dataMap.put("property_type", "Apartment");

@@ -46,6 +46,7 @@ public class RoasterService extends ApiService {
     String gmailDomain = propertiesReader.getGmailDomain();
     String customerName = propertiesReader.getCustomerName();
     String appointment_venue = propertiesReader.getAppointment_venue();
+    String customerType = propertiesReader.getCustomerType();
 
     public synchronized void initialize() {
             try {
@@ -76,7 +77,7 @@ public class RoasterService extends ApiService {
     public Map<String, String> createProject(String dpEmail, int count) throws InterruptedException {
         String formattedCount = String.format("%02d", count);
         String mobileNumber = mobileNoStarting2digitPrefix + formatCurrentDate("ddMMyy") + formattedCount;
-        String email = customerName + mobileNumber + gmailDomain;
+        String email = customerName.replaceAll("\\s+", "") + mobileNumber + gmailDomain;
         Map<String, String> customerDetails = createNewProLead(mobileNumber, email, dpEmail, count);
         String userId = customerDetails.get("userId");
         String customerId = customerDetails.get("customerId");
@@ -213,7 +214,11 @@ public class RoasterService extends ApiService {
 
     public void updateAddress(String userId) {
         log.log(Level.INFO, "Executing updateAddress Method");
+        if(environment.equalsIgnoreCase("preProd") && customerType.equalsIgnoreCase("HFN")){
+            response = invokePostRequestWithMapOfObjet("https://rosters-v2-preprod-sap-cutover.homelane.com/api/v1/general/update_address/", rosterPayloadHelper.getUpdateAddressPayload(userId, testData), commonHeaders(), cookiesData);
+        } else{
         response = invokePostRequestWithMapOfObjet(roasterBaseUrl + "/welcome/updateAddressToZohoAndLocalDB", rosterPayloadHelper.getUpdateAddressPayload(userId, testData), commonHeaders(), cookiesData);
+        }
         Assert.assertEquals(200, response.statusCode(), response.asPrettyString());
         log.log(Level.INFO, "Address Updated Successfully");
     }
@@ -409,18 +414,29 @@ public class RoasterService extends ApiService {
         return response.asPrettyString();
     }
 
-    public List<Map<String,String>> getShowroomList(){
-        System.out.println(commonHeaders());
-        System.out.println("Showroom List API: "+roasterBaseUrl+"/apis/Customer_detail_v2/getShowroomsList?city_specific=true");
-        response = invokeGetRequest(roasterBaseUrl+"/apis/Customer_detail_v2/getShowroomsList?city_specific=true", commonHeaders());
-        Assert.assertEquals(200, response.getStatusCode(),response.asPrettyString());
-        List<Map<String,String>> listOfShowrooms = response.jsonPath().getList("");
+    public List<Map<String,String>> getShowroomList(String customerType){
         List<Map<String,String>> result =  new ArrayList<>();
-        // for (Map<String,String> showroom : listOfShowrooms){
-        //      if (showroom.get("city_name").equalsIgnoreCase(cityName)){
-        //          result.add(showroom);
-        //      }
-        // }
-      return listOfShowrooms;
+        if(customerType.equalsIgnoreCase("HFN")){
+            String prodCookie = " traffic_source=utmcsr=direct|device=null|keyword=null|position=null|adgroup_id=null|landingpage=www.homelane.com/payment?stage_id=h6weKoMzuSz0%2FNeRstMJKzrfKSmCTl4M5DsRyxNzETU%3D; first_interaction=utmcsr=direct|device=null|keyword=null|position=null|adgroup_id=null; session_date=23/10/2025; _vwo_uuid_v2=D1E3DA0B8FF32E5C55B3BE84F07FFABD1|9538ec4d2bbff84345ab3ac0e0e981a0; _vwo_uuid=D1E3DA0B8FF32E5C55B3BE84F07FFABD1; _vis_opt_exp_71_combi=3; _gcl_au=1.1.1199058800.1761201521; _fbp=fb.1.1761201520998.816521036871469503; _vis_opt_exp_71_goal_1=1; _vis_opt_exp_71_goal_2=1; homelane-_zldp=ol43%2F8WmCpCIGPXbH8otWlyBskMeEcGRNzt%2Ft3c5tY%2BD8wcz7PevdHYHkuKgbeXMqaV0tnRbIq4%3D; _gid=GA1.2.1217222507.1761539617; _vis_opt_exp_61_combi=3; _vis_opt_exp_61_goal_1=1; _vis_opt_exp_61_goal_2=1; _ga_G0HBTJ9HSK=GS2.2.s1761646713$o1$g1$t1761646835$j46$l0$h0; _ga_GPY7DV32LQ=GS2.1.s1761646712$o1$g1$t1761646866$j3$l0$h0; _clck=188ddyj%5E2%5Eg0k%5E0%5E2105; _vwo_ds=3%241761201516%3A49.97364326%3A%3A%3A%3A%3A1761713582%3A1761673079; _vis_opt_s=4%7C; _vis_opt_test_cookie=1; homelane=a%3A5%3A%7Bs%3A10%3A%22session_id%22%3Bs%3A32%3A%227741059fe41900999f65ef84a41f07a9%22%3Bs%3A10%3A%22ip_address%22%3Bs%3A11%3A%2210.0.138.97%22%3Bs%3A10%3A%22user_agent%22%3Bs%3A111%3A%22Mozilla%2F5.0+%28Windows+NT+10.0%3B+Win64%3B+x64%29+AppleWebKit%2F537.36+%28KHTML%2C+like+Gecko%29+Chrome%2F141.0.0.0+Safari%2F537.36%22%3Bs%3A13%3A%22last_activity%22%3Bi%3A1761714089%3Bs%3A12%3A%22session_data%22%3Bs%3A0%3A%22%22%3B%7D38f7ca1f9e7dd6cff723d79fddf873f22907074b; _ga_7G53CN5TWE=GS2.1.s1761713583$o3$g1$t1761714090$j60$l0$h0; cto_bundle=nMsIC18lMkJsWk9yWThCRmJNZHhaWW5PJTJGUmxkV2RlSW9oWGtCMzFoSVY2RHpRYWYxYlJsdGpZJTJGRDlZbWdwNHlEZFppdGxmYTFwVXdTNUI3ZGNHJTJCdXpQZnJQemRTTnJpVGlOSmVmVnFzek9LczJxVDNxbGxiZW83cnJMR0kzUEtWV3NSZzk4ZUxyemxVNHBkRGxQU0xFcHElMkYwSVJyQ0tmbFdhZmV2NjV4QVp4YVNDWHJyTUZiTExxRDlOYmFFdWZ3UldiM1BKazMxJTJCOEhQSjVRYkZhNEV0VWoxbk1BJTNEJTNE; _uetsid=76616d50b3e711f0bc3715bc557fbf7c; _uetvid=4499f92093a211f0a263ffb05be61a80; _clsk=1d8wpzr%5E1761743008512%5E2%5E1%5Eo.clarity.ms%2Fcollect; user_name=testhfndealer%40homelane.com; cookie_pass=C%2FFHd7%2Bag0kcSedlOFMZwEid0lznu5vgbcsGp7wc04U%3D; mp_159efc34b5648bde9758becc2d7b5d95_mixpanel=%7B%22distinct_id%22%3A%22%24device%3A0ff2b53f-3d66-4003-b02e-d63e574ac2e1%22%2C%22%24device_id%22%3A%220ff2b53f-3d66-4003-b02e-d63e574ac2e1%22%2C%22%24initial_referrer%22%3A%22https%3A%2F%2Frosters.homelane.com%2Fv2%2Flogin%22%2C%22%24initial_referring_domain%22%3A%22rosters.homelane.com%22%2C%22__mps%22%3A%7B%7D%2C%22__mpso%22%3A%7B%22%24initial_referrer%22%3A%22https%3A%2F%2Frosters.homelane.com%2Fv2%2Flogin%22%2C%22%24initial_referring_domain%22%3A%22rosters.homelane.com%22%7D%2C%22__mpus%22%3A%7B%7D%2C%22__mpa%22%3A%7B%7D%2C%22__mpu%22%3A%7B%7D%2C%22__mpr%22%3A%5B%5D%2C%22__mpap%22%3A%5B%5D%7D; _ga_8JTMFJ6JMW=GS2.2.s1761744988$o18$g1$t1761745241$j60$l0$h0; _ga=GA1.1.374078852.1759727601; mp_930ff1d63438a667a2a39beaaf781ea4_mixpanel=%7B%22distinct_id%22%3A%22%24device%3A9abbdd67-2309-4008-8ba2-02e420ac35d9%22%2C%22%24device_id%22%3A%229abbdd67-2309-4008-8ba2-02e420ac35d9%22%2C%22%24initial_referrer%22%3A%22https%3A%2F%2Frosters-preprod-new.homelane.com%2Fv2%2Fcustomer_search%22%2C%22%24initial_referring_domain%22%3A%22rosters-preprod-new.homelane.com%22%2C%22__mps%22%3A%7B%7D%2C%22__mpso%22%3A%7B%22%24initial_referrer%22%3A%22https%3A%2F%2Frosters-preprod-new.homelane.com%2Fv2%2Fcustomer_search%22%2C%22%24initial_referring_domain%22%3A%22rosters-preprod-new.homelane.com%22%7D%2C%22__mpus%22%3A%7B%7D%2C%22__mpa%22%3A%7B%7D%2C%22__mpu%22%3A%7B%7D%2C%22__mpr%22%3A%5B%5D%2C%22__mpap%22%3A%5B%5D%7D; g_state={\"i_l\":0,\"i_ll\":1761747075517,\"i_b\":\"0JYbd+49P5wMWyaDj5RNiVRN4TONBaZQcxzX27nxqt4\"}; ci_session="+cookiesData.get("ci_session")+"; user_details="+cookiesData.get("django_access_token")+"; rosterV2_access="+cookiesData.get("rosterV2_access")+"; rosterV2_refresh="+cookiesData.get("rosterV2_access")+";";
+            Map<String,String> headers = new HashMap<>();
+            headers.put("Cookie", prodCookie);
+            headers.putAll(commonHeaders());
+            response = invokeGetRequest(roasterBaseUrl+"/apis/leads/lead_create_data", headers);
+                    Assert.assertEquals(200, response.getStatusCode(),response.asPrettyString());
+                    List<Map<String,String>> listOfShowrooms = response.jsonPath().getList("data");
+                    for(Map<String,String> showroom : listOfShowrooms){
+                        Map<String,String> oneShowRoom = new HashMap<>();
+                        oneShowRoom.put("showroom_name", showroom.get("showroom_name"));
+                        oneShowRoom.put("live_sf_id", showroom.get("showrooms_sf_id"));
+                        result.add(oneShowRoom);
+                    }
+        }else{
+            response = invokeGetRequest(roasterBaseUrl+"/apis/Customer_detail_v2/getShowroomsList?city_specific=false", commonHeaders());
+    
+        Assert.assertEquals(200, response.getStatusCode(),response.asPrettyString());
+        result = response.jsonPath().getList("");
+        }
+        
+      return result;
     }
 }

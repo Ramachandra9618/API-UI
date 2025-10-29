@@ -55,7 +55,7 @@ public class TestHelperController extends ControllerConfigService {
             roasterService = new RoasterService();
             roasterService.initialize();
 
-            List<Map<String, String>> showroomList = roasterService.getShowroomList();
+            List<Map<String, String>> showroomList = roasterService.getShowroomList(customerType);
 
             response.put("status", "success");
             response.put("customerType", customerType);

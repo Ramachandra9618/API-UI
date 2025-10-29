@@ -15,7 +15,7 @@ public class SFService extends UIBaseClass {
         PropertiesReader propertiesReader = new PropertiesReader(testData);
         String formattedCount  = String.format("%02d", count);
         String mobileNumber = propertiesReader.getMobilePrefix() +formatCurrentDate("ddMMyy")+formattedCount;
-        String email = propertiesReader.getCustomerName() + mobileNumber + propertiesReader.getGmailDomain();
+        String email = (propertiesReader.getCustomerName()).replaceAll("\\s+", "") + mobileNumber + propertiesReader.getGmailDomain();
         // Launch SF app
         initializeDriver();
         driver.get(propertiesReader.getSf_url());

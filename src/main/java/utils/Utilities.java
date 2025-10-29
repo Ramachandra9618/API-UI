@@ -14,10 +14,6 @@ import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import org.yaml.snakeyaml.Yaml;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public class Utilities {
     private static final Logger log = LogManager.getLogger(Utilities.class);
@@ -377,15 +373,16 @@ public class Utilities {
         return result.trim();
     }
 
-    public static String customerNameFormatter(String name, int count, String envirnoment, String brand) {
-        String formattedName;
-        if (envirnoment.equalsIgnoreCase("prod") && brand.equalsIgnoreCase("DC")) {
-            formattedName = "Test" + name + convertDateToStringFormat() + convert(count);
-        } else {
-            formattedName = name + convertDateToStringFormat() + convert(count);
-        }
-        return formattedName;
-    }
+    public static String customerNameFormatter(String name, int count, String environment, String brand) {
+    String prefix = environment.equalsIgnoreCase("prod") ? "Test" : "";
+    String datePart = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+
+    return String.format("%s%s%s%s",
+            prefix,
+            name.trim().replaceAll("\\s+", ""),
+            datePart,
+            count);
+}
 
     public static void csvToProperties(String csvFilePath, String propertiesFile) throws IOException {
         Properties properties = new Properties();

@@ -44,6 +44,7 @@ const customerType = document.getElementById('customerType');
                      "Trichy": "36"
                    },
                    "HFN": {
+                    "Bengaluru": "1",
                      "Hyderabad": "8",
                      "Kolkata": "4",
                      "Jamshedpur": "25",
@@ -52,7 +53,6 @@ const customerType = document.getElementById('customerType');
                      "Tirupati": "16",
                      "Mysore": "14",
                      "Chennai": "2",
-                     "Bengaluru": "1",
                      "Guwahati": "17",
                      "Patna": "15",
                      "Trivandrum": "22",

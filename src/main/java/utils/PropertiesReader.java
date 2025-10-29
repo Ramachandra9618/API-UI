@@ -85,14 +85,16 @@ public class PropertiesReader {
         logged_in_user_id = loginData.getOrDefault("logged_in_user_id", "");
         dp_email = loginData.getOrDefault("dp_email", "");
         dp_password = loginData.getOrDefault("dp_password", "");
+        if(customerType.equalsIgnoreCase("HL")){
         appointment_venue = String.valueOf(testData.get("showroomId")!=null? testData.get("showroomId") : testData.getOrDefault(env + "Appointment_venue", ""));
-
-        if (customerType.equalsIgnoreCase("DC")) {
+        }else if (customerType.equalsIgnoreCase("DC")) {
             sf_url = loginData.getOrDefault("SFurl", "");
             sf_login_email = loginData.getOrDefault("SFUserName", "");
             sf_login_password = loginData.getOrDefault("SFPassword", "");
             design_User = loginData.getOrDefault("design_User", "");
             appointment_venue = loginData.getOrDefault("DCAppointment_venue", "");
+        }else{
+            appointment_venue = String.valueOf(testData.get("showroomId")!=null? testData.get("showroomId") : testData.getOrDefault(env + "Hfn_showroom", ""));
         }
     }
 
@@ -116,6 +118,7 @@ public class PropertiesReader {
     public String getRoasterBaseUrl() { return roasterBaseUrl; }
     public String getDp_email() { return dp_email; }
     public String getDp_password() { return dp_password; }
+    public String getCustomerType() { return customerType; }
     public String getMobilePrefix() {
         return mobileNoStarting2digitPrefix; }
     public int getLeadCount() { return leadCount; }
