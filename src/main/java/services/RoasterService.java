@@ -432,8 +432,8 @@ public class RoasterService extends ApiService {
                     }
         }else{
             if (environment.equals("prod")) {
-                 response = invokeGetRequest(roasterBaseUrl+"/apis/Customer_detail_v2/apis/Customer_detail_v2/getShowroomsList?city_specific=false", commonHeaders());
-                Assert.assertEquals(200, response.getStatusCode(),response.asPrettyString());
+                 response = invokeGetRequest(roasterBaseUrl+"/apis/Customer_detail_v2/getShowroomsList?city_specific=true", commonHeaders());
+                 Assert.assertEquals(200, response.getStatusCode(),response.asPrettyString());
                 result = response.jsonPath().getList("");
                 }else{
                  response = invokeGetRequest("https://rosters-v2-preprod-sap-cutover.homelane.com/api/v1/auth/user/get_showrooms_list/?city_specific=true", commonHeaders());
