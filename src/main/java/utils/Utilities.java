@@ -379,9 +379,7 @@ public class Utilities {
 
     return String.format("%s%s%s%s",
             prefix,
-            name.trim().replaceAll("\\s+", ""),
-            datePart,
-            count);
+            name.trim().replaceAll("\\s+", ""));
 }
 
     public static void csvToProperties(String csvFilePath, String propertiesFile) throws IOException {
