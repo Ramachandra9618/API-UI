@@ -12,11 +12,13 @@
             background-size: cover;
         }
 
+      
 
         .container {
             max-width: 800px;
             height:550px;
-            margin: 30px auto;
+            margin: 30px auto;  
+            margin-top: 5%;
             padding: 20px 30px;
             background: rgba(255, 255, 255, 0.1);
             border-radius: 18px;

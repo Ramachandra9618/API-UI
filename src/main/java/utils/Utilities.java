@@ -377,11 +377,10 @@ public class Utilities {
     String prefix = environment.equalsIgnoreCase("prod") ? "Test" : "";
     String datePart = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
 
-    return String.format("%s%s%s%s",
+    return String.format("%s%s",
             prefix,
-            name.trim().replaceAll("\\s+", ""),
-            datePart,
-            count);
+            name.trim().replaceAll("\\s+", "")
+            );
 }
 
     public static void csvToProperties(String csvFilePath, String propertiesFile) throws IOException {
