@@ -138,6 +138,7 @@ public class Utilities {
         try {
             if (!Files.exists(configDir)) Files.createDirectories(configDir);
 
+            // ✅ Load existing properties if file exists
             if (Files.exists(filePath)) {
                 try (InputStream in = Files.newInputStream(filePath)) {
                     props.load(in);
@@ -160,6 +161,7 @@ public class Utilities {
 
             System.out.println("✅ Properties updated successfully: " + filePath.toAbsolutePath());
             return true;
+
         } catch (IOException e) {
             System.err.println("❌ Error updating properties file: " + e.getMessage());
             return false;
@@ -299,9 +301,11 @@ public synchronized static Map<String, Object> addToTestDataFromProperties(Strin
         }
     }
 
+
     public void renamingLeadReportFile(String filePath, String finalFileName) {
         File oldFile = new File(filePath);
         String parentDir = oldFile.getParent();
+
         File newFile = new File(parentDir, finalFileName);
         boolean renamed = oldFile.renameTo(newFile);
         if (!renamed) log.warn("⚠️ Failed to rename report file.");
@@ -358,23 +362,30 @@ public synchronized static Map<String, Object> addToTestDataFromProperties(Strin
                 }
             }
             properties.store(writer, "Generated from CSV");
+            //log.info("Properties file created successfully: {}", propertiesFile);
         }
     }
+
 
     public static Map<String, Map<String, String>> loadCityDataFromJson(String filePath) {
         try (FileReader reader = new FileReader(filePath)) {
             JSONParser parser = new JSONParser();
             JSONObject jsonObject = (JSONObject) parser.parse(reader);
+
             Map<String, Map<String, String>> cityData = new HashMap<>();
+
             for (Object key : jsonObject.keySet()) {
                 String type = (String) key;
                 JSONObject cities = (JSONObject) jsonObject.get(type);
+
                 Map<String, String> cityMap = new HashMap<>();
                 for (Object cityKey : cities.keySet()) {
                     cityMap.put((String) cityKey, (String) cities.get(cityKey));
                 }
+
                 cityData.put(type, cityMap);
             }
+
             return cityData;
         } catch (Exception e) {
             e.printStackTrace();
