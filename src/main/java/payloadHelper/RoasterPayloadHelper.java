@@ -25,7 +25,7 @@ public class RoasterPayloadHelper {
     public Map<String, Object> getCustomerAndPropertyDetailsPayload(String mobileNumber,String email, int count, Map<String, Object> testData) {
         Map<String, Object> body = new HashMap<>();
         body.put("from_name", "customer-details-form");
-        body.put("name", customerNameFormatter(propertiesReader.getCustomerName(), count,environment,customerType));
+        body.put("name", customerNameFormatter(propertiesReader.getCustomerName(), count,environment,propertiesReader.getLeadCount()));
         body.put("email", email);
         body.put("country_code","91");
         body.put("mobile", mobileNumber);

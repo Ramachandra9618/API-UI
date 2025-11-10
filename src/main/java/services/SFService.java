@@ -50,7 +50,7 @@ public class SFService extends UIBaseClass {
         homePage.clickDesignUserDropdown(propertiesReader.getDesign_User());
 
         homePage.enterCity((String) testData.get("property_city"));
-        homePage.enterLastName(customerNameFormatter(propertiesReader.getCustomerName(), count,propertiesReader.getEnvironment(),"DC"));
+        homePage.enterLastName(customerNameFormatter(propertiesReader.getCustomerName(), count,propertiesReader.getEnvironment(),propertiesReader.getLeadCount()));
         homePage.enterEmail(email);
         homePage.enterMobilePhone(mobileNumber);
 
